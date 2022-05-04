@@ -1,27 +1,32 @@
 package com.github.stephenostapenko.fifteenpuzzle
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import javax.swing.JComponent
 
-class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
+const val SHUFFLE_ITERATIONS = 501
+
+class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     fun createPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
                 MaterialTheme {
                     Surface(modifier = Modifier.fillMaxSize()) {
-                        Column(modifier = Modifier.padding(20.dp)) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(20.dp)
+                        ) {
                             buttonsForPuzzle()
                             successLabel()
+                            shuffleButton()
                         }
                     }
                 }
@@ -35,11 +40,14 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
             Row {
                 for (col in 0 until columnsNumber) {
                     Button(
-                        modifier = Modifier.padding(5.dp).weight(1f),
-                        enabled = contexts[row][col].enabled.value,
-                        onClick = getOnClickAction(row, col)
+                        enabled = buttonContexts[row][col].enabled.value,
+                        onClick = getOnClickAction(row, col),
+                        modifier = Modifier.scale(1f, 1.5f).padding(5.dp).weight(1f)
                     ) {
-                        Text(text = contexts[row][col].label.value)
+                        Text(
+                            text = buttonContexts[row][col].label.value,
+                            modifier = Modifier.scale(1.2f, 0.8f)
+                        )
                     }
                 }
             }
@@ -53,13 +61,27 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
                 "Success!"
             } else {
                 ""
-            }
+            },
+            modifier = Modifier.scale(2f).padding(20.dp)
         )
+    }
+
+    @Composable
+    fun shuffleButton() {
+        Button(
+            enabled = gameFinishedState.value || gameInitState.value,
+            onClick = {
+                shuffleCells()
+            },
+            modifier = Modifier.scale(1.25f).padding(15.dp)
+        ) {
+            Text(text = "Shuffle cells")
+        }
     }
 
     private data class ButtonContext(val label: MutableState<String>, val enabled: MutableState<Boolean>)
 
-    private val contexts = (0 until rowsNumber).map { row ->
+    private val buttonContexts = (0 until rowsNumber).map { row ->
         (0 until columnsNumber).map { col ->
             ButtonContext(
                 label = mutableStateOf((row * columnsNumber + col + 1).toString()),
@@ -68,18 +90,21 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
         }
     }
     private var gameFinishedState = mutableStateOf(false)
+    private var gameInitState = mutableStateOf(true)
 
     private fun swapContexts(row1: Int, col1: Int, row2: Int, col2: Int) {
-        contexts[row1][col1].label.value = contexts[row2][col2].label.value.also {
-            contexts[row2][col2].label.value = contexts[row1][col1].label.value
+        buttonContexts[row1][col1].label.value = buttonContexts[row2][col2].label.value.also {
+            buttonContexts[row2][col2].label.value = buttonContexts[row1][col1].label.value
         }
-        contexts[row1][col1].enabled.value = contexts[row2][col2].enabled.value.also {
-            contexts[row2][col2].enabled.value = contexts[row1][col1].enabled.value
+        buttonContexts[row1][col1].enabled.value = buttonContexts[row2][col2].enabled.value.also {
+            buttonContexts[row2][col2].enabled.value = buttonContexts[row1][col1].enabled.value
         }
     }
 
     private fun getOnClickAction(row: Int, col: Int): (() -> Unit) {
         return {
+            gameInitState.value = false
+
             for ((rowDelta, colDelta) in listOf(
                 Pair(-1, 0),
                 Pair(0, 1),
@@ -90,11 +115,12 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
                     col + colDelta !in (0 until columnsNumber)) {
                     continue
                 }
-                if (!contexts[row + rowDelta][col + colDelta].enabled.value) {
+                if (!buttonContexts[row + rowDelta][col + colDelta].enabled.value) {
                     swapContexts(row, col, row + rowDelta, col + colDelta)
                     break
                 }
             }
+
             updateSuccess()
         }
     }
@@ -102,7 +128,7 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
     private fun checkForSuccess(): Boolean {
         for (row in 0 until rowsNumber) {
             for (col in 0 until columnsNumber) {
-                if (contexts[row][col].label.value != (row * columnsNumber + col + 1).toString()) {
+                if (buttonContexts[row][col].label.value != (row * columnsNumber + col + 1).toString()) {
                     return false
                 }
             }
@@ -112,5 +138,46 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
 
     private fun updateSuccess() {
         gameFinishedState.value = checkForSuccess()
+    }
+
+    private fun shuffleCells() {
+        val cells = (0 until rowsNumber).map { row ->
+            (0 until columnsNumber).map { col ->
+                row * columnsNumber + col + 1
+            }.toMutableList()
+        }
+
+        var curRow = rowsNumber - 1
+        var curCol = columnsNumber - 1
+        val deltas = listOf(
+            Pair(-1, 0),
+            Pair(0, 1),
+            Pair(1, 0),
+            Pair(0, -1)
+        )
+
+        for (it in 0 until SHUFFLE_ITERATIONS) {
+            var (rowDelta, colDelta) = deltas.random()
+            while (curRow + rowDelta !in (0 until rowsNumber) ||
+                curCol + colDelta !in (0 until columnsNumber)) {
+                val (nextRowDelta, nextColDelta) = deltas.random()
+                rowDelta = nextRowDelta
+                colDelta = nextColDelta
+            }
+
+            cells[curRow][curCol] = cells[curRow + rowDelta][curCol + colDelta].also {
+                cells[curRow + rowDelta][curCol + colDelta] = cells[curRow][curCol]
+            }
+            curRow += rowDelta
+            curCol += colDelta
+        }
+
+        gameFinishedState.value = false
+        for (row in 0 until rowsNumber) {
+            for (col in 0 until columnsNumber) {
+                buttonContexts[row][col].label.value = cells[row][col].toString()
+                buttonContexts[row][col].enabled.value = !(row == curRow && col == curCol)
+            }
+        }
     }
 }
