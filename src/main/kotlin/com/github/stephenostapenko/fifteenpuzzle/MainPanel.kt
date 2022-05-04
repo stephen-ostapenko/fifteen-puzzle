@@ -25,6 +25,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                             modifier = Modifier.padding(20.dp)
                         ) {
                             buttonsForPuzzle()
+                            turnsCounter()
                             successLabel()
                             shuffleButton()
                         }
@@ -41,7 +42,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 for (col in 0 until columnsNumber) {
                     Button(
                         enabled = buttonContexts[row][col].enabled.value,
-                        onClick = getOnClickAction(row, col),
+                        onClick = getOnClickActionForPuzzleButton(row, col),
                         modifier = Modifier.scale(1f, 1.5f).padding(5.dp).weight(1f)
                     ) {
                         Text(
@@ -55,13 +56,17 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     }
 
     @Composable
+    fun turnsCounter() {
+        Text(
+            text = "${turnsCount.value} turn" + if (turnsCount.value != 1) "s" else "",
+            modifier = Modifier.scale(2f).padding(top = 20.dp, bottom = 15.dp)
+        )
+    }
+
+    @Composable
     fun successLabel() {
         Text(
-            text = if (gameFinishedState.value) {
-                "Success!"
-            } else {
-                ""
-            },
+            text = if (gameFinishedState.value) "Success!" else "",
             modifier = Modifier.scale(2f).padding(20.dp)
         )
     }
@@ -91,6 +96,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     }
     private var gameFinishedState = mutableStateOf(false)
     private var gameInitState = mutableStateOf(true)
+    private var turnsCount = mutableStateOf(0)
 
     private fun swapContexts(row1: Int, col1: Int, row2: Int, col2: Int) {
         buttonContexts[row1][col1].label.value = buttonContexts[row2][col2].label.value.also {
@@ -101,8 +107,13 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
     }
 
-    private fun getOnClickAction(row: Int, col: Int): (() -> Unit) {
+    private fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
         return {
+            if (gameInitState.value) {
+                turnsCount.value = 1
+            } else {
+                turnsCount.value++
+            }
             gameInitState.value = false
 
             for ((rowDelta, colDelta) in listOf(
@@ -121,7 +132,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 }
             }
 
-            updateSuccess()
+            updateGameStates()
         }
     }
 
@@ -136,8 +147,11 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         return true
     }
 
-    private fun updateSuccess() {
+    private fun updateGameStates() {
         gameFinishedState.value = checkForSuccess()
+        if (gameFinishedState.value) {
+            gameInitState.value = true
+        }
     }
 
     private fun shuffleCells() {
@@ -173,6 +187,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
 
         gameFinishedState.value = false
+        turnsCount.value = 0
         for (row in 0 until rowsNumber) {
             for (col in 0 until columnsNumber) {
                 buttonContexts[row][col].label.value = cells[row][col].toString()
