@@ -109,13 +109,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
     private fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
         return {
-            if (gameInitState.value) {
-                turnsCount.value = 1
-            } else {
-                turnsCount.value++
-            }
-            gameInitState.value = false
-
+            var turnCompleted = false
             for ((rowDelta, colDelta) in listOf(
                 Pair(-1, 0),
                 Pair(0, 1),
@@ -128,8 +122,14 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 }
                 if (!buttonContexts[row + rowDelta][col + colDelta].enabled.value) {
                     swapContexts(row, col, row + rowDelta, col + colDelta)
+                    turnCompleted = true
                     break
                 }
+            }
+
+            if (turnCompleted) {
+                turnsCount.value = if (gameInitState.value) 1 else turnsCount.value + 1
+                gameInitState.value = false
             }
 
             updateGameStates()
