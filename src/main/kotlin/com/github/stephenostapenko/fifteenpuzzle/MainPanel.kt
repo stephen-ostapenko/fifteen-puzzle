@@ -14,7 +14,7 @@ import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.unit.dp
 import javax.swing.JComponent
 
-class MainPanel {
+class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
     fun createPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
@@ -31,11 +31,11 @@ class MainPanel {
 
     private data class ButtonContext(val label: MutableState<String>, val enabled: MutableState<Boolean>)
 
-    private val contexts = (0..3).map { i ->
-        (0..3).map { j ->
+    private val contexts = (0 until rowsNumber).map { row ->
+        (0 until columnsNumber).map { col ->
             ButtonContext(
-                label = mutableStateOf((i * 4 + j + 1).toString()),
-                enabled = mutableStateOf(i != 3 || j != 3)
+                label = mutableStateOf((row * columnsNumber + col + 1).toString()),
+                enabled = mutableStateOf(row != rowsNumber - 1 || col != columnsNumber - 1)
             )
         }
     }
@@ -57,7 +57,8 @@ class MainPanel {
                 Pair(1, 0),
                 Pair(0, -1)
             )) {
-                if (row + rowDelta !in (0..3) || col + colDelta !in (0..3)) {
+                if (row + rowDelta !in (0 until rowsNumber) ||
+                    col + colDelta !in (0 until columnsNumber)) {
                     continue
                 }
                 if (!contexts[row + rowDelta][col + colDelta].enabled.value) {
@@ -70,11 +71,11 @@ class MainPanel {
 
     @Composable
     private fun getButtons() {
-        for (row in 0..3) {
+        for (row in 0 until rowsNumber) {
             Row {
-                for (col in 0..3) {
+                for (col in 0 until columnsNumber) {
                     Button(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.padding(5.dp).weight(1f),
                         enabled = contexts[row][col].enabled.value,
                         onClick = getOnClickAction(row, col)
                     ) {
