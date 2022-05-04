@@ -8,7 +8,6 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.unit.dp
@@ -21,12 +20,41 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
                 MaterialTheme {
                     Surface(modifier = Modifier.fillMaxSize()) {
                         Column(modifier = Modifier.padding(20.dp)) {
-                            getButtons()
+                            buttonsForPuzzle()
+                            successLabel()
                         }
                     }
                 }
             }
         }
+    }
+
+    @Composable
+    private fun buttonsForPuzzle() {
+        for (row in 0 until rowsNumber) {
+            Row {
+                for (col in 0 until columnsNumber) {
+                    Button(
+                        modifier = Modifier.padding(5.dp).weight(1f),
+                        enabled = contexts[row][col].enabled.value,
+                        onClick = getOnClickAction(row, col)
+                    ) {
+                        Text(text = contexts[row][col].label.value)
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun successLabel() {
+        Text(
+            text = if (gameFinishedState.value) {
+                "Success!"
+            } else {
+                ""
+            }
+        )
     }
 
     private data class ButtonContext(val label: MutableState<String>, val enabled: MutableState<Boolean>)
@@ -39,6 +67,7 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
             )
         }
     }
+    private var gameFinishedState = mutableStateOf(false)
 
     private fun swapContexts(row1: Int, col1: Int, row2: Int, col2: Int) {
         contexts[row1][col1].label.value = contexts[row2][col2].label.value.also {
@@ -66,23 +95,22 @@ class MainPanel(val rowsNumber: Int, val columnsNumber: Int) {
                     break
                 }
             }
+            updateSuccess()
         }
     }
 
-    @Composable
-    private fun getButtons() {
+    private fun checkForSuccess(): Boolean {
         for (row in 0 until rowsNumber) {
-            Row {
-                for (col in 0 until columnsNumber) {
-                    Button(
-                        modifier = Modifier.padding(5.dp).weight(1f),
-                        enabled = contexts[row][col].enabled.value,
-                        onClick = getOnClickAction(row, col)
-                    ) {
-                        Text(text = contexts[row][col].label.value)
-                    }
+            for (col in 0 until columnsNumber) {
+                if (contexts[row][col].label.value != (row * columnsNumber + col + 1).toString()) {
+                    return false
                 }
             }
         }
+        return true
+    }
+
+    private fun updateSuccess() {
+        gameFinishedState.value = checkForSuccess()
     }
 }
