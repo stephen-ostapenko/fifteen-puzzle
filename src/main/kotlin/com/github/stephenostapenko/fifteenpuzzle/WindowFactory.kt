@@ -11,7 +11,7 @@ class WindowFactory : ToolWindowFactory, DumbAware {
         println("Creating content for window \"${toolWindow.id}\" in project \"${project.name}\"...")
 
         val content = ContentFactory.SERVICE.getInstance().createContent(
-            MainPanel(4, 4).createPanel(),
+            MainPanel(4, 4).getJComponentPanel(),
             "",
             false
         )

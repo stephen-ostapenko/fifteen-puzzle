@@ -15,22 +15,27 @@ import javax.swing.JComponent
 const val SHUFFLE_ITERATIONS = 501
 
 class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
-    fun createPanel(): JComponent {
+    @Composable
+    fun composePanel() {
+        MaterialTheme {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    buttonsForPuzzle()
+                    turnsCounter()
+                    successLabel()
+                    shuffleButton()
+                }
+            }
+        }
+    }
+
+    fun getJComponentPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
-                MaterialTheme {
-                    Surface(modifier = Modifier.fillMaxSize()) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-                            buttonsForPuzzle()
-                            turnsCounter()
-                            successLabel()
-                            shuffleButton()
-                        }
-                    }
-                }
+                composePanel()
             }
         }
     }
