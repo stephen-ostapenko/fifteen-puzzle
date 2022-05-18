@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -207,9 +208,38 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         val buttonWidth = (button.getScaledWidth() * boardWidth).roundToInt()
         button.resetPos(boardHeight, boardWidth)
 
-        button.onDragAction.value = { _, _ -> }
-        println("Creating action for $boardHeight x $boardWidth and $buttonHeight x $buttonWidth")
-        button.onDragAction.value = button.createOnDragAction(boardHeight, boardWidth, buttonHeight, buttonWidth)
+        //println("Checking with $boardHeight x $boardWidth and $buttonHeight x $buttonWidth")
+        val onDragActionSaver = Saver<Pair<(PointerInputChange, Offset) -> Unit, Int>, Int> (
+            save = { it.second }, restore = { button.createOnDragAction(it, boardWidth, buttonHeight, buttonWidth) to it }
+        )
+        val onDragAction: Pair<(PointerInputChange, Offset) -> Unit, Int> by rememberSaveable(saver = onDragActionSaver) {
+            mutableStateOf(
+                action@{ change: PointerInputChange, dragAmount: Offset ->
+                    if (!button.active) {
+                        return@action
+                    }
+
+                    gameFinishedState.value = false
+                    button.moveToTop()
+
+                    val nextButtonXPos = button.getXPos() + dragAmount.x.roundToInt()
+                    val nextButtonYPos = button.getYPos() + dragAmount.y.roundToInt()
+
+                    if (nextButtonXPos !in 0..(boardWidth - buttonWidth)) {
+                        //println("Hit side")
+                        //println("Checking with $boardHeight x $boardWidth and $buttonHeight x $buttonWidth")
+                        return@action
+                    }
+                    if (nextButtonYPos !in 0..(boardHeight - buttonHeight)) {
+                        return@action
+                    }
+
+                    button.setXPos(nextButtonXPos)
+                    button.setYPos(nextButtonYPos)
+                    change.consumeAllChanges()
+                } to boardHeight
+            )
+        }
 
         button.onDragEndAction.value = action@{
             button.moveToBottom()
@@ -260,7 +290,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 .zIndex(if (button.active) button.getOrderingIndex() else -1f)
                 .pointerInput(Unit) {
                     detectDragGestures(
-                        onDrag = button.onDragAction.value,
+                        onDrag = onDragAction.first,
                         onDragEnd = button.onDragEndAction.value
                     )
                 }
