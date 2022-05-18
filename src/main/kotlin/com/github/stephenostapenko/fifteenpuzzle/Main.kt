@@ -13,7 +13,7 @@ fun main() = application {
     Window(
         onCloseRequest = ::exitApplication,
         title = "Fifteen Puzzle",
-        state = rememberWindowState(width = 480.dp, height = 720.dp),
+        state = rememberWindowState(width = 480.dp, height = 720.dp)
     ) {
         MainPanel(4, 4).composePanel()
     }

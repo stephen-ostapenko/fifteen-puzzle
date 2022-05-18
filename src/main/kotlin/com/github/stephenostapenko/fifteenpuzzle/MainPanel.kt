@@ -6,20 +6,24 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import kotlin.math.abs
 import javax.swing.JComponent
 import kotlin.math.pow
@@ -28,26 +32,90 @@ import kotlin.math.roundToInt
 const val SHUFFLE_ITERATIONS = 3
 
 class PuzzleButton(val label: String,
-                   initRow: Int, initCol: Int,
+                   val initRow: Int, val initCol: Int,
                    private val rowsNumber: Int, private val columnsNumber: Int)
 {
-    private var row = initRow
-    private var col = initCol
-    val xPos = mutableStateOf(0)
-    val yPos = mutableStateOf(0)
-    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+    var row = initRow
+    var col = initCol
+
+    private val xPos = mutableStateOf(0)
+    private val yPos = mutableStateOf(0)
+
+    fun getXPos(): Int {
+        return xPos.value
+    }
+
+    fun getYPos(): Int {
+        return yPos.value
+    }
+
+    fun setXPos(pos: Int) {
+        xPos.value = pos
+    }
+
+    fun setYPos(pos: Int) {
+        yPos.value = pos
+    }
+
+    fun shiftXPos(shift: Int) {
+        xPos.value += shift
+    }
+
+    fun shiftYPos(shift: Int) {
+        yPos.value += shift
+    }
 
     fun resetPos(height: Int, width: Int) {
-        xPos.value = (getScaledXPos() * width).roundToInt()
-        yPos.value = (getScaledYPos() * height).roundToInt()
+        setXPos((getScaledXPos() * width).roundToInt())
+        setYPos((getScaledYPos() * height).roundToInt())
     }
 
-    fun getRow(): Int {
-        return row
+    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+
+    private val orderingIndex = mutableStateOf(0f)
+
+    fun getOrderingIndex(): Float {
+        return orderingIndex.value
     }
 
-    fun getCol(): Int {
-        return col
+    fun moveToTop() {
+        orderingIndex.value = 1f
+    }
+
+    fun moveToBottom() {
+        orderingIndex.value = 0f
+    }
+
+    val onDragAction: MutableState<(PointerInputChange, Offset) -> Unit> = mutableStateOf( { _, _ -> } )
+    val onDragEndAction: MutableState<() -> Unit> = mutableStateOf( {} )
+
+    fun createOnDragAction(boardHeight: Int, boardWidth: Int, buttonHeight: Int, buttonWidth: Int):
+                (PointerInputChange, Offset) -> Unit
+    {
+        return action@{ change, dragAmount ->
+            println("$buttonHeight x $buttonWidth")
+            if (!active) {
+                return@action
+            }
+
+            moveToTop()
+
+            val nextButtonXPos = getXPos() + dragAmount.x.roundToInt()
+            val nextButtonYPos = getYPos() + dragAmount.y.roundToInt()
+
+            if (nextButtonXPos !in 0..(boardWidth - buttonWidth)) {
+                //println("Hit side")
+                //println("Checking with $boardHeight x $boardWidth and $buttonHeight x $buttonWidth")
+                return@action
+            }
+            if (nextButtonYPos !in 0..(boardHeight - buttonHeight)) {
+                return@action
+            }
+
+            setXPos(nextButtonXPos)
+            setYPos(nextButtonYPos)
+            change.consumeAllChanges()
+        }
     }
 
     fun getScaledHeight(): Double {
@@ -71,11 +139,15 @@ class PuzzleButton(val label: String,
         col = button.col.also { button.col = col }
     }
 
+    fun getManhattanDistOnGrid(button: PuzzleButton): Int {
+        return abs(row - button.row) + abs(col - button.col)
+    }
+
     fun findNearestButtonToCurrent(boardHeight: Int, boardWidth: Int, buttonList: List<PuzzleButton>): PuzzleButton {
         return buttonList.minByOrNull { button ->
             val buttonXPos = button.getScaledXPos() * boardWidth
             val buttonYPos = button.getScaledYPos() * boardHeight
-            val dist = (xPos.value - buttonXPos).pow(2) + (yPos.value - buttonYPos).pow(2)
+            val dist = (getXPos() - buttonXPos).pow(2) + (getYPos() - buttonYPos).pow(2)
             dist
         } ?: error("Button list is empty")
     }
@@ -131,29 +203,49 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
     @Composable
     private fun puzzleButton(button: PuzzleButton, boardHeight: Int, boardWidth: Int) {
-        /*println("Button for $currentBoardHeight x $currentBoardWidth")
-        val row by remember { mutableStateOf(button.getRow()) }
-        val col by remember { mutableStateOf(button.getCol()) }
-        var boardHeight by remember { mutableStateOf(0) }
-        boardHeight = currentBoardHeight
-        var boardWidth by remember { mutableStateOf(0) }
-        boardWidth = currentBoardWidth
-        val buttonHeight by remember { mutableStateOf((button.getScaledHeight() * boardHeight).roundToInt()) }
-        val buttonWidth by remember { mutableStateOf((button.getScaledWidth() * boardWidth).roundToInt()) }
-        println("Button: $buttonHeight x $buttonWidth")
-        val buttonInitXPos by remember { mutableStateOf((button.getScaledXPos() * boardWidth).roundToInt()) }
-        val buttonInitYPos by remember { mutableStateOf((button.getScaledYPos() * boardHeight).roundToInt()) }
-        var buttonXPos by remember { mutableStateOf(buttonInitXPos) }
-        var buttonYPos by remember { mutableStateOf(buttonInitYPos) }*/
-        //println("Button for $boardHeight x $boardWidth")
-        val row = button.getRow()
-        val col = button.getCol()
         val buttonHeight = (button.getScaledHeight() * boardHeight).roundToInt()
         val buttonWidth = (button.getScaledWidth() * boardWidth).roundToInt()
-        //println("Button: $buttonHeight x $buttonWidth")
-        //var buttonInitXPos by remember { mutableStateOf() }
-        //var buttonInitYPos by remember { mutableStateOf() }
         button.resetPos(boardHeight, boardWidth)
+
+        button.onDragAction.value = { _, _ -> }
+        println("Creating action for $boardHeight x $boardWidth and $buttonHeight x $buttonWidth")
+        button.onDragAction.value = button.createOnDragAction(boardHeight, boardWidth, buttonHeight, buttonWidth)
+
+        button.onDragEndAction.value = action@{
+            button.moveToBottom()
+
+            val swapButton = button.findNearestButtonToCurrent(boardHeight, boardWidth, buttons)
+
+            if (swapButton.active) {
+                button.resetPos(boardHeight, boardWidth)
+                return@action
+            }
+            if (button.getManhattanDistOnGrid(swapButton) != 1) {
+                button.resetPos(boardHeight, boardWidth)
+                return@action
+            }
+            if (button.getXPos() !in
+                (swapButton.getXPos() - buttonWidth / 2)..(swapButton.getXPos() + buttonWidth / 2))
+            {
+                button.resetPos(boardHeight, boardWidth)
+                return@action
+            }
+            if (button.getYPos() !in
+                (swapButton.getYPos() - buttonHeight / 2)..(swapButton.getYPos() + buttonHeight / 2))
+            {
+                button.resetPos(boardHeight, boardWidth)
+                return@action
+            }
+
+            button.swapPositions(swapButton)
+            button.resetPos(boardHeight, boardWidth)
+            swapButton.resetPos(boardHeight, boardWidth)
+
+            turnsCount.value++
+            if (checkForSuccess()) {
+                gameFinishedState.value = true
+            }
+        }
 
         Button(
             enabled = button.active,
@@ -163,50 +255,14 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 .width(buttonWidth.dp)
                 .padding(5.dp)
                 .offset {
-                    IntOffset(button.xPos.value, button.yPos.value)
+                    IntOffset(button.getXPos(), button.getYPos())
                 }
+                .zIndex(if (button.active) button.getOrderingIndex() else -1f)
                 .pointerInput(Unit) {
-                    detectDragGestures(onDragEnd = {
-                        val swapButton = button.findNearestButtonToCurrent(boardHeight, boardWidth, buttons)
-                        println("${swapButton.getRow()} ${swapButton.getCol()}")
-                        if (!swapButton.active && abs(row - swapButton.getRow()) + abs(col - swapButton.getCol()) == 1) {
-                            if (button.xPos.value !in
-                                (swapButton.xPos.value - buttonWidth / 2)..(swapButton.xPos.value + buttonWidth / 2))
-                            {
-                                button.resetPos(boardHeight, boardWidth)
-                                return@detectDragGestures
-                            }
-                            if (button.yPos.value !in
-                                (swapButton.yPos.value - buttonHeight / 2)..(swapButton.yPos.value + buttonHeight / 2)) {
-                                button.resetPos(boardHeight, boardWidth)
-                                return@detectDragGestures
-                            }
-
-                            button.swapPositions(swapButton)
-                            button.resetPos(boardHeight, boardWidth)
-                            swapButton.resetPos(boardHeight, boardWidth)
-                        } else {
-                            button.resetPos(boardHeight, boardWidth)
-                        }
-                    }) { change, dragAmount ->
-                        if (!button.active) {
-                            return@detectDragGestures
-                        }
-
-                        val nextButtonXPos = button.xPos.value + dragAmount.x.roundToInt()
-                        val nextButtonYPos = button.yPos.value + dragAmount.y.roundToInt()
-
-                        if (nextButtonXPos !in 0..(boardWidth - buttonWidth)) {
-                            return@detectDragGestures
-                        }
-                        if (nextButtonYPos !in 0..(boardHeight - buttonHeight)) {
-                            return@detectDragGestures
-                        }
-
-                        button.xPos.value = nextButtonXPos
-                        button.yPos.value = nextButtonYPos
-                        change.consumeAllChanges()
-                    }
+                    detectDragGestures(
+                        onDrag = button.onDragAction.value,
+                        onDragEnd = button.onDragEndAction.value
+                    )
                 }
         ) {
             Text(
@@ -249,6 +305,10 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     private var gameInitState = mutableStateOf(true)
     private var turnsCount = mutableStateOf(0)
 
+    private fun checkForSuccess(): Boolean {
+        return buttons.all { it.row == it.initRow && it.col == it.initCol }
+    }
+
     /*private fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
         return {
             var turnCompleted = false
@@ -276,17 +336,6 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
             updateGameStates()
         }
-    }*/
-
-    /*private fun checkForSuccess(): Boolean {
-        for (row in 0 until rowsNumber) {
-            for (col in 0 until columnsNumber) {
-                if (buttonContexts[row][col].label.value != (row * columnsNumber + col + 1).toString()) {
-                    return false
-                }
-            }
-        }
-        return true
     }*/
 
     /*private fun updateGameStates() {
