@@ -1,5 +1,6 @@
 package com.github.stephenostapenko.fifteenpuzzle
 
+import androidx.compose.runtime.Composable
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow

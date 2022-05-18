@@ -1,37 +1,87 @@
 package com.github.stephenostapenko.fifteenpuzzle
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.consumeAllChanges
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlin.math.abs
 import javax.swing.JComponent
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
-const val SHUFFLE_ITERATIONS = 501
+const val SHUFFLE_ITERATIONS = 3
 
-class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
-    @Composable
-    fun composePanel() {
-        MaterialTheme {
-            Surface(modifier = Modifier.fillMaxSize()) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    buttonsForPuzzle()
-                    turnsCounter()
-                    successLabel()
-                    shuffleButton()
-                }
-            }
-        }
+class PuzzleButton(val label: String,
+                   initRow: Int, initCol: Int,
+                   private val rowsNumber: Int, private val columnsNumber: Int)
+{
+    private var row = initRow
+    private var col = initCol
+    val xPos = mutableStateOf(0)
+    val yPos = mutableStateOf(0)
+    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+
+    fun resetPos(height: Int, width: Int) {
+        xPos.value = (getScaledXPos() * width).roundToInt()
+        yPos.value = (getScaledYPos() * height).roundToInt()
     }
 
+    fun getRow(): Int {
+        return row
+    }
+
+    fun getCol(): Int {
+        return col
+    }
+
+    fun getScaledHeight(): Double {
+        return 1.0 / columnsNumber
+    }
+
+    fun getScaledWidth(): Double {
+        return 1.0 / rowsNumber
+    }
+
+    fun getScaledXPos(): Double {
+        return getScaledHeight() * row
+    }
+
+    fun getScaledYPos(): Double {
+        return getScaledWidth() * col
+    }
+
+    fun swapPositions(button: PuzzleButton) {
+        row = button.row.also { button.row = row }
+        col = button.col.also { button.col = col }
+    }
+
+    fun findNearestButtonToCurrent(boardHeight: Int, boardWidth: Int, buttonList: List<PuzzleButton>): PuzzleButton {
+        return buttonList.minByOrNull { button ->
+            val buttonXPos = button.getScaledXPos() * boardWidth
+            val buttonYPos = button.getScaledYPos() * boardHeight
+            val dist = (xPos.value - buttonXPos).pow(2) + (yPos.value - buttonYPos).pow(2)
+            dist
+        } ?: error("Button list is empty")
+    }
+}
+
+class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     fun getJComponentPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
@@ -41,22 +91,128 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     }
 
     @Composable
-    private fun buttonsForPuzzle() {
-        for (row in 0 until rowsNumber) {
-            Row {
-                for (col in 0 until columnsNumber) {
-                    Button(
-                        enabled = buttonContexts[row][col].enabled.value,
-                        onClick = getOnClickActionForPuzzleButton(row, col),
-                        modifier = Modifier.scale(1f, 1.5f).padding(5.dp).weight(1f)
-                    ) {
-                        Text(
-                            text = buttonContexts[row][col].label.value,
-                            modifier = Modifier.scale(1.2f, 0.8f)
-                        )
-                    }
+    fun composePanel() {
+        MaterialTheme {
+            Surface(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    turnsCounter()
+                    successLabel()
+                    shuffleButton()
+                    puzzleButtons()
                 }
             }
+        }
+    }
+
+    private val buttons = (0 until rowsNumber).map { row ->
+        (0 until columnsNumber).map { col ->
+            PuzzleButton("($row, $col)", row, col, rowsNumber, columnsNumber)
+        }
+    }.flatten()
+
+    @Composable
+    private fun puzzleButtons() {
+        BoxWithConstraints(modifier = Modifier
+            .fillMaxSize()
+            .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(5.dp))
+        ) {
+            for (button in buttons) {
+                puzzleButton(
+                    button = button,
+                    boardHeight = constraints.maxHeight,
+                    boardWidth = constraints.maxWidth
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun puzzleButton(button: PuzzleButton, boardHeight: Int, boardWidth: Int) {
+        /*println("Button for $currentBoardHeight x $currentBoardWidth")
+        val row by remember { mutableStateOf(button.getRow()) }
+        val col by remember { mutableStateOf(button.getCol()) }
+        var boardHeight by remember { mutableStateOf(0) }
+        boardHeight = currentBoardHeight
+        var boardWidth by remember { mutableStateOf(0) }
+        boardWidth = currentBoardWidth
+        val buttonHeight by remember { mutableStateOf((button.getScaledHeight() * boardHeight).roundToInt()) }
+        val buttonWidth by remember { mutableStateOf((button.getScaledWidth() * boardWidth).roundToInt()) }
+        println("Button: $buttonHeight x $buttonWidth")
+        val buttonInitXPos by remember { mutableStateOf((button.getScaledXPos() * boardWidth).roundToInt()) }
+        val buttonInitYPos by remember { mutableStateOf((button.getScaledYPos() * boardHeight).roundToInt()) }
+        var buttonXPos by remember { mutableStateOf(buttonInitXPos) }
+        var buttonYPos by remember { mutableStateOf(buttonInitYPos) }*/
+        //println("Button for $boardHeight x $boardWidth")
+        val row = button.getRow()
+        val col = button.getCol()
+        val buttonHeight = (button.getScaledHeight() * boardHeight).roundToInt()
+        val buttonWidth = (button.getScaledWidth() * boardWidth).roundToInt()
+        //println("Button: $buttonHeight x $buttonWidth")
+        //var buttonInitXPos by remember { mutableStateOf() }
+        //var buttonInitYPos by remember { mutableStateOf() }
+        button.resetPos(boardHeight, boardWidth)
+
+        Button(
+            enabled = button.active,
+            onClick = {},
+            modifier = Modifier
+                .height(buttonHeight.dp)
+                .width(buttonWidth.dp)
+                .padding(5.dp)
+                .offset {
+                    IntOffset(button.xPos.value, button.yPos.value)
+                }
+                .pointerInput(Unit) {
+                    detectDragGestures(onDragEnd = {
+                        val swapButton = button.findNearestButtonToCurrent(boardHeight, boardWidth, buttons)
+                        println("${swapButton.getRow()} ${swapButton.getCol()}")
+                        if (!swapButton.active && abs(row - swapButton.getRow()) + abs(col - swapButton.getCol()) == 1) {
+                            if (button.xPos.value !in
+                                (swapButton.xPos.value - buttonWidth / 2)..(swapButton.xPos.value + buttonWidth / 2))
+                            {
+                                button.resetPos(boardHeight, boardWidth)
+                                return@detectDragGestures
+                            }
+                            if (button.yPos.value !in
+                                (swapButton.yPos.value - buttonHeight / 2)..(swapButton.yPos.value + buttonHeight / 2)) {
+                                button.resetPos(boardHeight, boardWidth)
+                                return@detectDragGestures
+                            }
+
+                            button.swapPositions(swapButton)
+                            button.resetPos(boardHeight, boardWidth)
+                            swapButton.resetPos(boardHeight, boardWidth)
+                        } else {
+                            button.resetPos(boardHeight, boardWidth)
+                        }
+                    }) { change, dragAmount ->
+                        if (!button.active) {
+                            return@detectDragGestures
+                        }
+
+                        val nextButtonXPos = button.xPos.value + dragAmount.x.roundToInt()
+                        val nextButtonYPos = button.yPos.value + dragAmount.y.roundToInt()
+
+                        if (nextButtonXPos !in 0..(boardWidth - buttonWidth)) {
+                            return@detectDragGestures
+                        }
+                        if (nextButtonYPos !in 0..(boardHeight - buttonHeight)) {
+                            return@detectDragGestures
+                        }
+
+                        button.xPos.value = nextButtonXPos
+                        button.yPos.value = nextButtonYPos
+                        change.consumeAllChanges()
+                    }
+                }
+        ) {
+            Text(
+                text = button.label,
+                fontSize = 24.sp
+            )
         }
     }
 
@@ -81,7 +237,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         Button(
             enabled = gameFinishedState.value || gameInitState.value,
             onClick = {
-                shuffleCells()
+                //shuffleCells()
             },
             modifier = Modifier.scale(1.25f).padding(15.dp)
         ) {
@@ -89,30 +245,11 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
     }
 
-    private data class ButtonContext(val label: MutableState<String>, val enabled: MutableState<Boolean>)
-
-    private val buttonContexts = (0 until rowsNumber).map { row ->
-        (0 until columnsNumber).map { col ->
-            ButtonContext(
-                label = mutableStateOf((row * columnsNumber + col + 1).toString()),
-                enabled = mutableStateOf(row != rowsNumber - 1 || col != columnsNumber - 1)
-            )
-        }
-    }
     private var gameFinishedState = mutableStateOf(false)
     private var gameInitState = mutableStateOf(true)
     private var turnsCount = mutableStateOf(0)
 
-    private fun swapContexts(row1: Int, col1: Int, row2: Int, col2: Int) {
-        buttonContexts[row1][col1].label.value = buttonContexts[row2][col2].label.value.also {
-            buttonContexts[row2][col2].label.value = buttonContexts[row1][col1].label.value
-        }
-        buttonContexts[row1][col1].enabled.value = buttonContexts[row2][col2].enabled.value.also {
-            buttonContexts[row2][col2].enabled.value = buttonContexts[row1][col1].enabled.value
-        }
-    }
-
-    private fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
+    /*private fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
         return {
             var turnCompleted = false
             for ((rowDelta, colDelta) in listOf(
@@ -139,9 +276,9 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
             updateGameStates()
         }
-    }
+    }*/
 
-    private fun checkForSuccess(): Boolean {
+    /*private fun checkForSuccess(): Boolean {
         for (row in 0 until rowsNumber) {
             for (col in 0 until columnsNumber) {
                 if (buttonContexts[row][col].label.value != (row * columnsNumber + col + 1).toString()) {
@@ -150,16 +287,16 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             }
         }
         return true
-    }
+    }*/
 
-    private fun updateGameStates() {
+    /*private fun updateGameStates() {
         gameFinishedState.value = checkForSuccess()
         if (gameFinishedState.value) {
             gameInitState.value = true
         }
-    }
+    }*/
 
-    private fun shuffleCells() {
+    /*private fun shuffleCells() {
         val cells = (0 until rowsNumber).map { row ->
             (0 until columnsNumber).map { col ->
                 row * columnsNumber + col + 1
@@ -199,5 +336,5 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 buttonContexts[row][col].enabled.value = !(row == curRow && col == curCol)
             }
         }
-    }
+    }*/
 }
