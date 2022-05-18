@@ -35,8 +35,7 @@ const val SHUFFLE_ITERATIONS = 3
 
 class PuzzleButton(val label: String,
                    val initRow: Int, val initCol: Int,
-                   private val rowsNumber: Int, private val columnsNumber: Int /*,
-                   val boardHeight: Int, val boardWidth: Int*/)
+                   private val rowsNumber: Int, private val columnsNumber: Int)
 {
     var row = initRow
     var col = initCol
@@ -67,6 +66,11 @@ class PuzzleButton(val label: String,
     fun shiftYPos(shift: Int) {
         yPos.value += shift
     }
+
+    @Volatile
+    var boardHeight = 0
+    @Volatile
+    var boardWidth = 0
 
     fun resetPos(boardHeight: Int, boardWidth: Int) {
         setXPos((getScaledXPos() * boardWidth).roundToInt())
@@ -122,11 +126,10 @@ class PuzzleButton(val label: String,
         return abs(row - button.row) + abs(col - button.col)
     }
 
-    fun findNearestButtonToCurrent(boardHeight: Int, boardWidth: Int, buttonList: List<PuzzleButton>): PuzzleButton {
+    fun findNearestButtonToCurrent(buttonList: List<PuzzleButton>): PuzzleButton {
         return buttonList.minByOrNull { button ->
             val buttonXPos = button.getScaledXPos() * boardWidth
             val buttonYPos = button.getScaledYPos() * boardHeight
-            //println("$buttonXPos $buttonYPos")
             val dist = (getXPos() - buttonXPos).pow(2) + (getYPos() - buttonYPos).pow(2)
             dist
         } ?: error("Button list is empty")
@@ -171,15 +174,23 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             .fillMaxSize()
             .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(5.dp))
         ) {
-            for (button in buttonList) {
-                puzzleButton(button, constraints.maxHeight, constraints.maxWidth)
+            buttonList.forEach {
+                it.boardHeight = constraints.maxHeight
+                it.boardWidth = constraints.maxWidth
+            }
+
+            buttonList.forEach {
+                puzzleButton(it, buttonList)
             }
         }
     }
 
     @Composable
     @Suppress("UNUSED_VARIABLE")
-    private fun puzzleButton(button: PuzzleButton, boardHeight: Int, boardWidth: Int) {
+    private fun puzzleButton(button: PuzzleButton, buttonList: List<PuzzleButton>) {
+        val boardHeight = button.boardHeight
+        val boardWidth = button.boardWidth
+
         button.resetPos(boardHeight, boardWidth)
 
         if (!button.active) {
@@ -218,8 +229,9 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
             println("==============")
             println("${button.row} ${button.col}")
-            val swapButton = button.findNearestButtonToCurrent(boardHeight, boardWidth, buttonList)
+            val swapButton = button.findNearestButtonToCurrent(buttonList)
             println("${swapButton.row} ${swapButton.col}")
+            println("${button.boardHeight} x ${button.boardWidth}")
 
             if (swapButton.active) {
                 button.resetPos(boardHeight, boardWidth)
@@ -257,7 +269,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             //println("${button.getXPos()} ${swapButton.getXPos()}")
 
             turnsCount.value++
-            if (checkForSuccess()) {
+            if (checkForSuccess(buttonList)) {
                 gameFinishedState.value = true
             }
         }
@@ -320,7 +332,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     private var gameInitState = mutableStateOf(true)
     private var turnsCount = mutableStateOf(0)
 
-    private fun checkForSuccess(): Boolean {
+    private fun checkForSuccess(buttonList: List<PuzzleButton>): Boolean {
         return buttonList.all { it.row == it.initRow && it.col == it.initCol }
     }
 
