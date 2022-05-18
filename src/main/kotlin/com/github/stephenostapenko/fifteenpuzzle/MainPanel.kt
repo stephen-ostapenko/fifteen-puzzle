@@ -25,6 +25,8 @@ import kotlin.math.abs
 import javax.swing.JComponent
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.math.min
+import kotlin.math.max
 
 const val SHUFFLE_ITERATIONS = 3
 
@@ -54,14 +56,6 @@ class PuzzleButton(val label: String,
         yPos.value = pos
     }
 
-    fun shiftXPos(shift: Int) {
-        xPos.value += shift
-    }
-
-    fun shiftYPos(shift: Int) {
-        yPos.value += shift
-    }
-
     @Volatile
     var boardHeight = 0
     @Volatile
@@ -72,30 +66,6 @@ class PuzzleButton(val label: String,
         setYPos((getScaledYPos() * boardHeight).roundToInt())
     }
 
-    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
-
-    private val orderingIndex = mutableStateOf(0f)
-
-    fun getOrderingIndex(): Float {
-        return orderingIndex.value
-    }
-
-    fun moveToTop() {
-        orderingIndex.value = 1f
-    }
-
-    fun moveToBottom() {
-        orderingIndex.value = 0f
-    }
-
-    fun getScaledHeight(): Double {
-        return 1.0 / columnsNumber
-    }
-
-    fun getScaledWidth(): Double {
-        return 1.0 / rowsNumber
-    }
-
     fun getHeight(): Int {
         return (getScaledHeight() * boardHeight).roundToInt()
     }
@@ -104,12 +74,36 @@ class PuzzleButton(val label: String,
         return (getScaledWidth() * boardWidth).roundToInt()
     }
 
+    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+
+    private val selected = mutableStateOf(false)
+
+    fun checkSelected(): Boolean {
+        return selected.value
+    }
+
+    fun select() {
+        selected.value = true
+    }
+
+    fun deselect() {
+        selected.value = false
+    }
+
+    fun getScaledHeight(): Double {
+        return 1.0 / rowsNumber
+    }
+
+    fun getScaledWidth(): Double {
+        return 1.0 / columnsNumber
+    }
+
     fun getScaledXPos(): Double {
-        return getScaledHeight() * row
+        return getScaledWidth() * col
     }
 
     fun getScaledYPos(): Double {
-        return getScaledWidth() * col
+        return getScaledHeight() * row
     }
 
     fun swapPositions(button: PuzzleButton) {
@@ -157,9 +151,9 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
     }
 
-    private val buttonList: List<PuzzleButton> = (0 until rowsNumber).map { row ->
+    private var buttonList: List<PuzzleButton> = (0 until rowsNumber).map { row ->
         (0 until columnsNumber).map { col ->
-            PuzzleButton("($row, $col)", row, col, rowsNumber, columnsNumber)
+            PuzzleButton("${row * columnsNumber + col + 1}", row, col, rowsNumber, columnsNumber)
         }
     }.flatten()
 
@@ -167,7 +161,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     private fun puzzleButtons() {
         BoxWithConstraints(modifier = Modifier
             .fillMaxSize()
-            .border(BorderStroke(1.dp, Color.LightGray), RoundedCornerShape(5.dp))
+            .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
         ) {
             buttonList.forEach {
                 it.boardHeight = constraints.maxHeight
@@ -181,7 +175,6 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     }
 
     @Composable
-    @Suppress("UNUSED_VARIABLE")
     private fun puzzleButton(button: PuzzleButton) {
         button.updatePos()
 
@@ -191,17 +184,14 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             }
 
             gameFinishedState.value = false
-            button.moveToTop()
+            button.select()
 
-            val nextButtonXPos = button.getXPos() + dragAmount.x.roundToInt()
-            val nextButtonYPos = button.getYPos() + dragAmount.y.roundToInt()
-
-            if (nextButtonXPos !in 0..(button.boardWidth - button.getWidth())) {
-                return@action
-            }
-            if (nextButtonYPos !in 0..(button.boardHeight - button.getHeight())) {
-                return@action
-            }
+            var nextButtonXPos = button.getXPos() + dragAmount.x.roundToInt()
+            var nextButtonYPos = button.getYPos() + dragAmount.y.roundToInt()
+            nextButtonXPos = max(0, nextButtonXPos)
+            nextButtonXPos = min(button.boardWidth - button.getWidth(), nextButtonXPos)
+            nextButtonYPos = max(0, nextButtonYPos)
+            nextButtonYPos = min(button.boardHeight - button.getHeight(), nextButtonYPos)
 
             button.setXPos(nextButtonXPos)
             button.setYPos(nextButtonYPos)
@@ -209,14 +199,9 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
 
         val onDragEndAction = action@{
-            button.moveToBottom()
+            button.deselect()
 
-            println("==============")
-            println("${button.row} ${button.col}")
             val swapButton = button.findNearestButtonToCurrent(buttonList)
-            println("${swapButton.row} ${swapButton.col}")
-            println("${button.boardHeight} x ${button.boardWidth}")
-
             if (swapButton.active) {
                 button.updatePos()
                 return@action
@@ -241,16 +226,9 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 return@action
             }
 
-            //println("this is ${button.row} ${button.col}")
-            //println("that is ${swapButton.row} ${swapButton.col}")
-            //println("${button.getXPos()} ${swapButton.getXPos()}")
             button.swapPositions(swapButton)
-            //println("${button.getXPos()} ${swapButton.getXPos()}")
             button.updatePos()
-            //println("${button.getXPos()} ${swapButton.getXPos()}")
-            //println("swap: ${swapButton.getScaledXPos()} $boardWidth ${swapButton.getScaledXPos() * boardWidth}")
             swapButton.updatePos()
-            //println("${button.getXPos()} ${swapButton.getXPos()}")
 
             turnsCount.value++
             if (checkForSuccess()) {
@@ -261,11 +239,17 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         Button(
             enabled = button.active,
             onClick = {},
+            colors = ButtonDefaults.buttonColors(
+                if (button.checkSelected())
+                    MaterialTheme.colors.secondary
+                else
+                    MaterialTheme.colors.primary
+            ),
             modifier = Modifier
                 .height(button.getHeight().dp)
                 .width(button.getWidth().dp)
                 .padding(5.dp)
-                .zIndex(button.getOrderingIndex())
+                .zIndex(if (button.checkSelected()) 1f else 0f)
                 .offset {
                     IntOffset(button.getXPos(), button.getYPos())
                 }
@@ -277,7 +261,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
                 }
         ) {
             Text(
-                text = "${button.getXPos()}" + if (!button.active) "*" else "", //button.label,
+                text = button.label,
                 fontSize = 24.sp
             )
         }
