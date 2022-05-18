@@ -1,18 +1,13 @@
 package com.github.stephenostapenko.fifteenpuzzle
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
@@ -72,7 +67,7 @@ class PuzzleButton(val label: String,
     @Volatile
     var boardWidth = 0
 
-    fun resetPos(boardHeight: Int, boardWidth: Int) {
+    fun updatePos() {
         setXPos((getScaledXPos() * boardWidth).roundToInt())
         setYPos((getScaledYPos() * boardHeight).roundToInt())
     }
@@ -101,11 +96,11 @@ class PuzzleButton(val label: String,
         return 1.0 / rowsNumber
     }
 
-    fun getHeight(boardHeight: Int): Int {
+    fun getHeight(): Int {
         return (getScaledHeight() * boardHeight).roundToInt()
     }
 
-    fun getWidth(boardWidth: Int): Int {
+    fun getWidth(): Int {
         return (getScaledWidth() * boardWidth).roundToInt()
     }
 
@@ -180,23 +175,15 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             }
 
             buttonList.forEach {
-                puzzleButton(it, buttonList)
+                puzzleButton(it)
             }
         }
     }
 
     @Composable
     @Suppress("UNUSED_VARIABLE")
-    private fun puzzleButton(button: PuzzleButton, buttonList: List<PuzzleButton>) {
-        val boardHeight = button.boardHeight
-        val boardWidth = button.boardWidth
-
-        button.resetPos(boardHeight, boardWidth)
-
-        if (!button.active) {
-            val lockXPos = button.getXPos()
-            val lockYPos = button.getYPos()
-        }
+    private fun puzzleButton(button: PuzzleButton) {
+        button.updatePos()
 
         val onDragAction = action@{ change: PointerInputChange, dragAmount: Offset ->
             if (!button.active) {
@@ -209,15 +196,12 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             val nextButtonXPos = button.getXPos() + dragAmount.x.roundToInt()
             val nextButtonYPos = button.getYPos() + dragAmount.y.roundToInt()
 
-            /*if (nextButtonXPos !in 0..(boardWidth - buttonWidth)) {
+            if (nextButtonXPos !in 0..(button.boardWidth - button.getWidth())) {
                 return@action
             }
-            if (nextButtonYPos !in 0..(boardHeight - buttonHeight)) {
+            if (nextButtonYPos !in 0..(button.boardHeight - button.getHeight())) {
                 return@action
-            }*/
-            println(dragAmount)
-            println("${button.getXPos()} ${button.getYPos()}")
-            println("$nextButtonXPos $nextButtonYPos")
+            }
 
             button.setXPos(nextButtonXPos)
             button.setYPos(nextButtonYPos)
@@ -234,26 +218,26 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             println("${button.boardHeight} x ${button.boardWidth}")
 
             if (swapButton.active) {
-                button.resetPos(boardHeight, boardWidth)
+                button.updatePos()
                 return@action
             }
             if (button.getManhattanDistOnGrid(swapButton) != 1) {
-                button.resetPos(boardHeight, boardWidth)
+                button.updatePos()
                 return@action
             }
 
-            val halfButtonHeight = swapButton.getHeight(boardHeight) / 2
-            val halfButtonWidth = swapButton.getWidth(boardWidth) / 2
+            val halfButtonHeight = swapButton.getHeight() / 2
+            val halfButtonWidth = swapButton.getWidth() / 2
             if (button.getXPos() !in
                 (swapButton.getXPos() - halfButtonWidth)..(swapButton.getXPos() + halfButtonWidth))
             {
-                button.resetPos(boardHeight, boardWidth)
+                button.updatePos()
                 return@action
             }
             if (button.getYPos() !in
                 (swapButton.getYPos() - halfButtonHeight)..(swapButton.getYPos() + halfButtonHeight))
             {
-                button.resetPos(boardHeight, boardWidth)
+                button.updatePos()
                 return@action
             }
 
@@ -262,14 +246,14 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             //println("${button.getXPos()} ${swapButton.getXPos()}")
             button.swapPositions(swapButton)
             //println("${button.getXPos()} ${swapButton.getXPos()}")
-            button.resetPos(boardHeight, boardWidth)
+            button.updatePos()
             //println("${button.getXPos()} ${swapButton.getXPos()}")
             //println("swap: ${swapButton.getScaledXPos()} $boardWidth ${swapButton.getScaledXPos() * boardWidth}")
-            swapButton.resetPos(boardHeight, boardWidth)
+            swapButton.updatePos()
             //println("${button.getXPos()} ${swapButton.getXPos()}")
 
             turnsCount.value++
-            if (checkForSuccess(buttonList)) {
+            if (checkForSuccess()) {
                 gameFinishedState.value = true
             }
         }
@@ -278,8 +262,8 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             enabled = button.active,
             onClick = {},
             modifier = Modifier
-                .height(button.getHeight(boardHeight).dp)
-                .width(button.getWidth(boardWidth).dp)
+                .height(button.getHeight().dp)
+                .width(button.getWidth().dp)
                 .padding(5.dp)
                 .zIndex(button.getOrderingIndex())
                 .offset {
@@ -332,7 +316,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     private var gameInitState = mutableStateOf(true)
     private var turnsCount = mutableStateOf(0)
 
-    private fun checkForSuccess(buttonList: List<PuzzleButton>): Boolean {
+    private fun checkForSuccess(): Boolean {
         return buttonList.all { it.row == it.initRow && it.col == it.initCol }
     }
 
