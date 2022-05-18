@@ -30,8 +30,6 @@ repositories {
 }
 
 dependencies {
-    implementation("androidx.compose.runtime:runtime:1.1.0")
-
     implementation(compose.desktop.linux_arm64)
     implementation(compose.desktop.linux_x64)
     implementation(compose.desktop.macos_arm64)
