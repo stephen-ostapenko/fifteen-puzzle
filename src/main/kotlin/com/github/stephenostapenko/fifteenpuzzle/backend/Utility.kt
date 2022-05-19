@@ -2,7 +2,7 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 
 class Utility {
     companion object {
-        private const val SHUFFLE_ITERATIONS = 500
+        private const val SHUFFLE_ITERATIONS = 501
 
         fun shuffleCells(rowsNumber: Int, columnsNumber: Int, buttonList: List<List<PuzzleButton>>) {
             val cells = (0 until rowsNumber).map { row ->
