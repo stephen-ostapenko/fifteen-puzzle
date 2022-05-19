@@ -11,6 +11,6 @@ fun main() = application {
         title = "Fifteen Puzzle",
         state = rememberWindowState(width = 480.dp, height = 720.dp)
     ) {
-        MainPanel(4, 4).composePanel()
+        MainPanel(4, 4).getComposePanel()
     }
 }
