@@ -5,13 +5,27 @@ import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-@Suppress("MemberVisibilityCanBePrivate")
-class PuzzleButton(val label: String,
-                   val initRow: Int, val initCol: Int,
+@Suppress("MemberVisibilityCanBePrivate", "unused")
+class PuzzleButton(private var initRow: Int, private var initCol: Int,
                    private val rowsNumber: Int, private val columnsNumber: Int)
 {
-    var row = initRow
-    var col = initCol
+    private var row = initRow
+    private var col = initCol
+    private var label = "${row * columnsNumber + col + 1}"
+
+    fun getLabel(): String {
+        return label
+    }
+
+    fun moveButtonOnGrid(rowPosition: Int, colPosition: Int) {
+        row = rowPosition
+        col = colPosition
+        updatePositionOnBoard()
+    }
+
+    fun checkButtonPosition(): Boolean {
+        return row == initRow && col == initCol
+    }
 
     private val xPos = mutableStateOf(0)
     private val yPos = mutableStateOf(0)
@@ -35,9 +49,9 @@ class PuzzleButton(val label: String,
     var boardHeight = 0
     var boardWidth = 0
 
-    fun initButton(boardHeight: Int, boardWidth: Int) {
+    fun initButtonPositionOnBoard(boardHeight: Int, boardWidth: Int) {
         setBoardSize(boardHeight, boardWidth)
-        updatePos()
+        updatePositionOnBoard()
     }
 
     fun setBoardSize(height: Int, width: Int) {
@@ -45,7 +59,7 @@ class PuzzleButton(val label: String,
         boardWidth = width
     }
 
-    fun updatePos() {
+    fun updatePositionOnBoard() {
         setXPos((getScaledXPos() * boardWidth).roundToInt())
         setYPos((getScaledYPos() * boardHeight).roundToInt())
     }
@@ -58,7 +72,11 @@ class PuzzleButton(val label: String,
         return (getScaledWidth() * boardWidth).roundToInt()
     }
 
-    val active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+    private var active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
+
+    fun getActive(): Boolean {
+        return active
+    }
 
     private val selected = mutableStateOf(false)
 
@@ -99,8 +117,8 @@ class PuzzleButton(val label: String,
         return abs(row - button.row) + abs(col - button.col)
     }
 
-    fun findNearestButtonToCurrent(buttonList: List<PuzzleButton>): PuzzleButton {
-        return buttonList.minByOrNull { button ->
+    fun findNearestButtonToCurrent(buttonList: List<List<PuzzleButton>> ): PuzzleButton {
+        return buttonList.flatten().minByOrNull { button ->
             val buttonXPos = button.getScaledXPos() * boardWidth
             val buttonYPos = button.getScaledYPos() * boardHeight
             val dist = (getXPos() - buttonXPos).pow(2) + (getYPos() - buttonYPos).pow(2)

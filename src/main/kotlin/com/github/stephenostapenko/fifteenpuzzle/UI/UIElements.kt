@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.github.stephenostapenko.fifteenpuzzle.MainPanel.GameState
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButton
+import com.github.stephenostapenko.fifteenpuzzle.backend.Utility
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -28,9 +29,10 @@ import kotlin.math.roundToInt
 class UIElements {
     companion object {
         @Composable
-        fun composePanel(state: GameState,
-                         buttonList: List<PuzzleButton>,
-                         checkForSuccess: (List<PuzzleButton>) -> Boolean)
+        fun composePanel(rowsNumber: Int, columnsNumber: Int,
+                         state: GameState,
+                         buttonList: List<List<PuzzleButton>>,
+                         checkForSuccess: (List<List<PuzzleButton>>) -> Boolean)
         {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -40,7 +42,7 @@ class UIElements {
                     ) {
                         turnsCounter(state)
                         successLabel(state)
-                        shuffleButton(state)
+                        shuffleButton(rowsNumber, columnsNumber, state, buttonList)
                         puzzleButtons(state, buttonList, checkForSuccess)
                     }
                 }
@@ -49,19 +51,23 @@ class UIElements {
 
         @Composable
         private fun puzzleButtons(state: GameState,
-                                  buttonList: List<PuzzleButton>,
-                                  checkForSuccess: (List<PuzzleButton>) -> Boolean)
+                                  buttonList: List<List<PuzzleButton>>,
+                                  checkForSuccess: (List<List<PuzzleButton>>) -> Boolean)
         {
             BoxWithConstraints(modifier = Modifier
                 .fillMaxSize()
                 .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
             ) {
-                buttonList.forEach {
-                    it.initButton(constraints.maxHeight, constraints.maxWidth)
+                buttonList.forEach { rowList ->
+                    rowList.forEach {
+                        it.initButtonPositionOnBoard(constraints.maxHeight, constraints.maxWidth)
+                    }
                 }
 
-                buttonList.forEach {
-                    puzzleButton(state, it, buttonList, checkForSuccess)
+                buttonList.forEach { rowList ->
+                    rowList.forEach {
+                        puzzleButton(state, it, buttonList, checkForSuccess)
+                    }
                 }
             }
         }
@@ -69,13 +75,13 @@ class UIElements {
         @Composable
         private fun puzzleButton(state: GameState,
                          button: PuzzleButton,
-                         buttonList: List<PuzzleButton>,
-                         checkForSuccess: (List<PuzzleButton>) -> Boolean)
+                         buttonList: List<List<PuzzleButton>>,
+                         checkForSuccess: (List<List<PuzzleButton>>) -> Boolean)
         {
-            button.updatePos()
+            button.updatePositionOnBoard()
 
             val onDragAction = action@{ change: PointerInputChange, dragAmount: Offset ->
-                if (!button.active) {
+                if (!button.getActive()) {
                     return@action
                 }
 
@@ -98,12 +104,12 @@ class UIElements {
                 button.deselect()
 
                 val swapButton = button.findNearestButtonToCurrent(buttonList)
-                if (swapButton.active) {
-                    button.updatePos()
+                if (swapButton.getActive()) {
+                    button.updatePositionOnBoard()
                     return@action
                 }
                 if (button.getManhattanDistOnGrid(swapButton) != 1) {
-                    button.updatePos()
+                    button.updatePositionOnBoard()
                     return@action
                 }
 
@@ -112,19 +118,19 @@ class UIElements {
                 if (button.getXPos() !in
                     (swapButton.getXPos() - halfButtonWidth)..(swapButton.getXPos() + halfButtonWidth))
                 {
-                    button.updatePos()
+                    button.updatePositionOnBoard()
                     return@action
                 }
                 if (button.getYPos() !in
                     (swapButton.getYPos() - halfButtonHeight)..(swapButton.getYPos() + halfButtonHeight))
                 {
-                    button.updatePos()
+                    button.updatePositionOnBoard()
                     return@action
                 }
 
                 button.swapPositions(swapButton)
-                button.updatePos()
-                swapButton.updatePos()
+                button.updatePositionOnBoard()
+                swapButton.updatePositionOnBoard()
 
                 state.incTurnsCount()
                 if (checkForSuccess(buttonList)) {
@@ -133,7 +139,7 @@ class UIElements {
             }
 
             Button(
-                enabled = button.active,
+                enabled = button.getActive(),
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     if (button.checkSelected())
@@ -157,7 +163,7 @@ class UIElements {
                     }
             ) {
                 Text(
-                    text = button.label,
+                    text = button.getLabel(),
                     fontSize = 24.sp
                 )
             }
@@ -181,11 +187,14 @@ class UIElements {
         }
 
         @Composable
-        private fun shuffleButton(state: GameState) {
+        private fun shuffleButton(rowsNumber: Int, columnsNumber: Int,
+                                  state: GameState, buttonList: List<List<PuzzleButton>>)
+        {
             Button(
                 enabled = (state.getState() in GameState.notProgressStates),
                 onClick = {
-                    // shuffleCells()
+                    state.setReady()
+                    Utility.shuffleCells(rowsNumber, columnsNumber, buttonList)
                 },
                 modifier = Modifier.scale(1.25f).padding(15.dp)
             ) {
