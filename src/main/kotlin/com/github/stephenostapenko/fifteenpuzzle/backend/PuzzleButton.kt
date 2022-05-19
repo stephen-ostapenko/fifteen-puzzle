@@ -32,10 +32,18 @@ class PuzzleButton(val label: String,
         yPos.value = pos
     }
 
-    @Volatile
     var boardHeight = 0
-    @Volatile
     var boardWidth = 0
+
+    fun initButton(boardHeight: Int, boardWidth: Int) {
+        setBoardSize(boardHeight, boardWidth)
+        updatePos()
+    }
+
+    fun setBoardSize(height: Int, width: Int) {
+        boardHeight = height
+        boardWidth = width
+    }
 
     fun updatePos() {
         setXPos((getScaledXPos() * boardWidth).roundToInt())

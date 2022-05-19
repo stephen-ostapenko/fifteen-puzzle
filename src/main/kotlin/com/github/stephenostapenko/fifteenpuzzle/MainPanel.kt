@@ -27,8 +27,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-const val SHUFFLE_ITERATIONS = 3
-
 class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     fun getJComponentPanel(): JComponent {
         return ComposePanel().apply {
@@ -68,8 +66,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
         ) {
             buttonList.forEach {
-                it.boardHeight = constraints.maxHeight
-                it.boardWidth = constraints.maxWidth
+                it.initButton(constraints.maxHeight, constraints.maxWidth)
             }
 
             buttonList.forEach {
@@ -80,8 +77,6 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
     @Composable
     private fun puzzleButton(button: PuzzleButton) {
-        button.updatePos()
-
         val onDragAction = action@{ change: PointerInputChange, dragAmount: Offset ->
             if (!button.active) {
                 return@action
@@ -243,6 +238,8 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
             gameInitState.value = true
         }
     }*/
+
+    private val SHUFFLE_ITERATIONS = 3
 
     /*private fun shuffleCells() {
         val cells = (0 until rowsNumber).map { row ->
