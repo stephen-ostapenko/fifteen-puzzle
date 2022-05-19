@@ -17,9 +17,9 @@ class PuzzleButton(private var initRow: Int, private var initCol: Int,
         return label
     }
 
-    fun moveButtonOnGrid(rowPosition: Int, colPosition: Int) {
-        row = rowPosition
-        col = colPosition
+    fun moveButtonOnGrid(newRow: Int, newCol: Int) {
+        row = newRow
+        col = newCol
         updatePositionOnBoard()
     }
 
@@ -72,11 +72,7 @@ class PuzzleButton(private var initRow: Int, private var initCol: Int,
         return (getScaledWidth() * boardWidth).roundToInt()
     }
 
-    private var active = !(row + 1 == rowsNumber && col + 1 == columnsNumber)
-
-    fun getActive(): Boolean {
-        return active
-    }
+    val active = !(initRow + 1 == rowsNumber && initCol + 1 == columnsNumber)
 
     private val selected = mutableStateOf(false)
 
@@ -90,6 +86,14 @@ class PuzzleButton(private var initRow: Int, private var initCol: Int,
 
     fun deselect() {
         selected.value = false
+    }
+
+    fun getOrderIndex(): Float {
+        return when {
+            !active -> -1f
+            checkSelected() -> 1f
+            else -> 0f
+        }
     }
 
     fun getScaledHeight(): Double {

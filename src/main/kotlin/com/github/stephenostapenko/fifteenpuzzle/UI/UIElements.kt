@@ -9,6 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -81,7 +82,7 @@ class UIElements {
             button.updatePositionOnBoard()
 
             val onDragAction = action@{ change: PointerInputChange, dragAmount: Offset ->
-                if (!button.getActive()) {
+                if (!button.active) {
                     return@action
                 }
 
@@ -104,7 +105,7 @@ class UIElements {
                 button.deselect()
 
                 val swapButton = button.findNearestButtonToCurrent(buttonList)
-                if (swapButton.getActive()) {
+                if (swapButton.active) {
                     button.updatePositionOnBoard()
                     return@action
                 }
@@ -139,7 +140,7 @@ class UIElements {
             }
 
             Button(
-                enabled = button.getActive(),
+                enabled = button.active,
                 onClick = {},
                 colors = ButtonDefaults.buttonColors(
                     if (button.checkSelected())
@@ -151,10 +152,11 @@ class UIElements {
                     .height(button.getHeight().dp)
                     .width(button.getWidth().dp)
                     .padding(5.dp)
-                    .zIndex(if (button.checkSelected()) 1f else 0f)
+                    .zIndex(button.getOrderIndex())
                     .offset {
                         IntOffset(button.getXPos(), button.getYPos())
                     }
+                    .alpha(if (button.active) 1f else 0f)
                     .pointerInput(Unit) {
                         detectDragGestures(
                             onDrag = onDragAction,
