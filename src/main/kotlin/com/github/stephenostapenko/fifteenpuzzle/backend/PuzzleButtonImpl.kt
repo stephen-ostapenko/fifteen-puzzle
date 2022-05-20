@@ -2,11 +2,10 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 
 import androidx.compose.runtime.mutableStateOf
 import kotlin.math.abs
-import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-class PuzzleButtonImpl(private var initRow: Int, private var initCol: Int,
+class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
                        private val rowsNumber: Int, private val columnsNumber: Int)
 {
     private var row = initRow

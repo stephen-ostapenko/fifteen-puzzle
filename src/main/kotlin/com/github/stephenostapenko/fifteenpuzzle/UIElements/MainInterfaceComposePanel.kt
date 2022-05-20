@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
-import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 
 class MainInterfaceComposePanel {

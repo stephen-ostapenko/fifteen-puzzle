@@ -31,7 +31,7 @@ class Utility {
             }
         }*/
 
-        private const val SHUFFLE_ITERATIONS = 3
+        private const val SHUFFLE_ITERATIONS = 501
 
         fun shuffleCells(rowsNumber: Int, columnsNumber: Int, grid: PuzzleGrid) {
             val cells = (0 until rowsNumber).map { row ->
@@ -68,7 +68,7 @@ class Utility {
             for (row in 0 until rowsNumber) {
                 for (col in 0 until columnsNumber) {
                     val (rowPos, colPos) = cells[row][col]
-                    grid.setButtonPositionOnGrid(rowPos, colPos, row, col)
+                    grid.getButtonFromGrid(rowPos, colPos).moveButtonOnGrid(row, col)
                 }
             }
         }

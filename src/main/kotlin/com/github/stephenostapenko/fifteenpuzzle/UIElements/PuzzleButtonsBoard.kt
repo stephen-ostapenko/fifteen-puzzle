@@ -10,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
-import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 
 class PuzzleButtonsBoard {
@@ -22,7 +21,7 @@ class PuzzleButtonsBoard {
                 .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
             ) {
                 grid.initGrid(constraints.maxHeight, constraints.maxWidth)
-                grid.getButtonList().forEach {
+                grid.buttonList.forEach {
                     PuzzleButton.puzzleButton(state, it, grid)
                 }
             }
