@@ -3,31 +3,37 @@ package com.github.stephenostapenko.fifteenpuzzle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.awt.ComposePanel
-import com.github.stephenostapenko.fifteenpuzzle.UI.UIElements.Companion.composePanel
-import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButton
+import com.github.stephenostapenko.fifteenpuzzle.UIElements.MainInterfaceComposePanel
+import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import javax.swing.JComponent
 
 class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
-    private var buttonList: List<List<PuzzleButton>> = (0 until rowsNumber).map { row ->
+    private var buttonList: List<List<PuzzleButtonImpl>> = (0 until rowsNumber).map { row ->
         (0 until columnsNumber).map { col ->
-            PuzzleButton(row, col, rowsNumber, columnsNumber)
+            PuzzleButtonImpl(row, col, rowsNumber, columnsNumber)
         }
     }
 
     fun getJComponentPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
-                composePanel(rowsNumber, columnsNumber, GameState, buttonList, checkForSuccess)
+                MainInterfaceComposePanel.mainInterfaceComposePanel(
+                    rowsNumber, columnsNumber,
+                    GameState, buttonList, checkForSuccess
+                )
             }
         }
     }
 
     @Composable
     fun getComposePanel() {
-        composePanel(rowsNumber, columnsNumber, GameState, buttonList, checkForSuccess)
+        MainInterfaceComposePanel.mainInterfaceComposePanel(
+            rowsNumber, columnsNumber,
+            GameState, buttonList, checkForSuccess
+        )
     }
 
-    private val checkForSuccess = check@{ buttonList: List<List<PuzzleButton>> ->
+    private val checkForSuccess = check@{ buttonList: List<List<PuzzleButtonImpl>> ->
         return@check buttonList.all { rowList -> rowList.all { it.checkButtonPosition() } }
     }
 

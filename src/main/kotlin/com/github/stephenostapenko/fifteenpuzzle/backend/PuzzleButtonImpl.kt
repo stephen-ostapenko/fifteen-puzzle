@@ -6,8 +6,8 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-class PuzzleButton(private var initRow: Int, private var initCol: Int,
-                   private val rowsNumber: Int, private val columnsNumber: Int)
+class PuzzleButtonImpl(private var initRow: Int, private var initCol: Int,
+                       private val rowsNumber: Int, private val columnsNumber: Int)
 {
     private var row = initRow
     private var col = initCol
@@ -112,16 +112,16 @@ class PuzzleButton(private var initRow: Int, private var initCol: Int,
         return getScaledHeight() * row
     }
 
-    fun swapPositions(button: PuzzleButton) {
+    fun swapPositions(button: PuzzleButtonImpl) {
         row = button.row.also { button.row = row }
         col = button.col.also { button.col = col }
     }
 
-    fun getManhattanDistOnGrid(button: PuzzleButton): Int {
+    fun getManhattanDistOnGrid(button: PuzzleButtonImpl): Int {
         return abs(row - button.row) + abs(col - button.col)
     }
 
-    fun findNearestButtonToCurrent(buttonList: List<List<PuzzleButton>> ): PuzzleButton {
+    fun findNearestButtonToCurrent(buttonList: List<List<PuzzleButtonImpl>> ): PuzzleButtonImpl {
         return buttonList.flatten().minByOrNull { button ->
             val buttonXPos = button.getScaledXPos() * boardWidth
             val buttonYPos = button.getScaledYPos() * boardHeight

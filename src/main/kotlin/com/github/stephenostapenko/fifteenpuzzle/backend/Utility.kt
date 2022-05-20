@@ -4,7 +4,7 @@ class Utility {
     companion object {
         private const val SHUFFLE_ITERATIONS = 501
 
-        fun shuffleCells(rowsNumber: Int, columnsNumber: Int, buttonList: List<List<PuzzleButton>>) {
+        fun shuffleCells(rowsNumber: Int, columnsNumber: Int, buttonList: List<List<PuzzleButtonImpl>>) {
             val cells = (0 until rowsNumber).map { row ->
                 (0 until columnsNumber).map { col ->
                     row to col
