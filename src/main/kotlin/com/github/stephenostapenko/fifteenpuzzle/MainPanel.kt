@@ -14,7 +14,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
     }
 
-    fun getJComponentPanel(): JComponent {
+    fun getSwingPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
                 MainInterfaceComposePanel.mainInterfaceComposePanel(

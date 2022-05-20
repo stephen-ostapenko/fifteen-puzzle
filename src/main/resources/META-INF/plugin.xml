@@ -10,6 +10,7 @@
         <applicationService serviceImplementation="com.github.stephenostapenko.fifteenpuzzle.services.MyApplicationService"/>
         <projectService serviceImplementation="com.github.stephenostapenko.fifteenpuzzle.services.MyProjectService"/>
         <toolWindow id="Fifteen Puzzle"
+                    icon="com.github.stephenostapenko.fifteenpuzzle.icons.PluginIcons.MainPluginIcon"
                     factoryClass="com.github.stephenostapenko.fifteenpuzzle.WindowFactory"
                     anchor="right"/>
     </extensions>
@@ -21,6 +22,7 @@
 
     <actions>
         <action id="com.github.stephenostapenko.fifteenpuzzle.MainAction"
+                icon="com.github.stephenostapenko.fifteenpuzzle.icons.PluginIcons.MainPluginIcon"
                 class="com.github.stephenostapenko.fifteenpuzzle.MainPluginAction"
                 text="Play Fifteen Puzzle">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
