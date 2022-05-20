@@ -1,25 +1,20 @@
-package com.github.stephenostapenko.fifteenpuzzle
+package com.github.stephenostapenko.fifteenpuzzle.backend
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.awt.ComposePanel
 import com.github.stephenostapenko.fifteenpuzzle.UIElements.MainInterfaceComposePanel
-import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import javax.swing.JComponent
 
 class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
-    private var buttonList: List<List<PuzzleButtonImpl>> = (0 until rowsNumber).map { row ->
-        (0 until columnsNumber).map { col ->
-            PuzzleButtonImpl(row, col, rowsNumber, columnsNumber)
-        }
-    }
+    val grid = PuzzleGrid(rowsNumber, columnsNumber)
 
     fun getSwingPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
                 MainInterfaceComposePanel.mainInterfaceComposePanel(
                     rowsNumber, columnsNumber,
-                    GameState, buttonList, checkForSuccess
+                    GameState, grid
                 )
             }
         }
@@ -29,12 +24,8 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     fun getComposePanel() {
         MainInterfaceComposePanel.mainInterfaceComposePanel(
             rowsNumber, columnsNumber,
-            GameState, buttonList, checkForSuccess
+            GameState, grid
         )
-    }
-
-    private val checkForSuccess = check@{ buttonList: List<List<PuzzleButtonImpl>> ->
-        return@check buttonList.all { rowList -> rowList.all { it.checkButtonPosition() } }
     }
 
     @Suppress("MemberVisibilityCanBePrivate", "unused")

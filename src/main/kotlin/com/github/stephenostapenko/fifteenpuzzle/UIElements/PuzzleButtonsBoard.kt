@@ -9,30 +9,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.github.stephenostapenko.fifteenpuzzle.MainPanel
+import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
+import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 
-class PuzzleButtonsGrid {
+class PuzzleButtonsBoard {
     companion object {
         @Composable
-        fun puzzleButtonsGrid(state: MainPanel.GameState,
-                                      buttonList: List<List<PuzzleButtonImpl>>,
-                                      checkForSuccess: (List<List<PuzzleButtonImpl>>) -> Boolean)
-        {
+        fun puzzleButtonsBoard(state: MainPanel.GameState, grid: PuzzleGrid) {
             BoxWithConstraints(modifier = Modifier
                 .fillMaxSize()
                 .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
             ) {
-                buttonList.forEach { rowList ->
-                    rowList.forEach {
-                        it.initButtonPositionOnBoard(constraints.maxHeight, constraints.maxWidth)
-                    }
-                }
-
-                buttonList.forEach { rowList ->
-                    rowList.forEach {
-                        PuzzleButton.puzzleButton(state, it, buttonList, checkForSuccess)
-                    }
+                grid.initGrid(constraints.maxHeight, constraints.maxWidth)
+                grid.getButtonList().forEach {
+                    PuzzleButton.puzzleButton(state, it, grid)
                 }
             }
         }

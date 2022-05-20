@@ -13,6 +13,14 @@ class PuzzleButtonImpl(private var initRow: Int, private var initCol: Int,
     private var col = initCol
     private var label = "${row * columnsNumber + col + 1}"
 
+    fun getRow(): Int {
+        return row
+    }
+
+    fun getCol(): Int {
+        return col
+    }
+
     fun getLabel(): String {
         return label
     }
@@ -23,7 +31,7 @@ class PuzzleButtonImpl(private var initRow: Int, private var initCol: Int,
         updatePositionOnBoard()
     }
 
-    fun checkButtonPosition(): Boolean {
+    fun checkButtonFitsInitPosition(): Boolean {
         return row == initRow && col == initCol
     }
 
@@ -119,14 +127,5 @@ class PuzzleButtonImpl(private var initRow: Int, private var initCol: Int,
 
     fun getManhattanDistOnGrid(button: PuzzleButtonImpl): Int {
         return abs(row - button.row) + abs(col - button.col)
-    }
-
-    fun findNearestButtonToCurrent(buttonList: List<List<PuzzleButtonImpl>> ): PuzzleButtonImpl {
-        return buttonList.flatten().minByOrNull { button ->
-            val buttonXPos = button.getScaledXPos() * boardWidth
-            val buttonYPos = button.getScaledYPos() * boardHeight
-            val dist = (getXPos() - buttonXPos).pow(2) + (getYPos() - buttonYPos).pow(2)
-            dist
-        } ?: error("Button list is empty")
     }
 }

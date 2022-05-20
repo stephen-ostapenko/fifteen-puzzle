@@ -20,8 +20,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.github.stephenostapenko.fifteenpuzzle.MainPanel
+import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
+import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -31,8 +32,7 @@ class PuzzleButton {
         @Composable
         fun puzzleButton(state: MainPanel.GameState,
                          button: PuzzleButtonImpl,
-                         buttonList: List<List<PuzzleButtonImpl>>,
-                         checkForSuccess: (List<List<PuzzleButtonImpl>>) -> Boolean)
+                         grid: PuzzleGrid)
         {
             button.updatePositionOnBoard()
 
@@ -59,7 +59,7 @@ class PuzzleButton {
             val onDragEndAction = action@{
                 button.deselect()
 
-                val swapButton = button.findNearestButtonToCurrent(buttonList)
+                val swapButton = grid.findNearestButtonOnGrid(button)
                 if (swapButton.active) {
                     button.updatePositionOnBoard()
                     return@action
@@ -89,7 +89,7 @@ class PuzzleButton {
                 swapButton.updatePositionOnBoard()
 
                 state.incTurnsCount()
-                if (checkForSuccess(buttonList)) {
+                if (grid.checkIfGridIsFinished()) {
                     state.setFinished()
                 }
             }

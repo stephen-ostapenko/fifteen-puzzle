@@ -9,16 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.github.stephenostapenko.fifteenpuzzle.MainPanel
+import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
+import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 
 class MainInterfaceComposePanel {
     companion object {
         @Composable
         fun mainInterfaceComposePanel(rowsNumber: Int, columnsNumber: Int,
-                         state: MainPanel.GameState,
-                         buttonList: List<List<PuzzleButtonImpl>>,
-                         checkForSuccess: (List<List<PuzzleButtonImpl>>) -> Boolean)
+                                      state: MainPanel.GameState, grid: PuzzleGrid)
         {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -28,8 +27,8 @@ class MainInterfaceComposePanel {
                     ) {
                         TurnsCounter.turnsCounter(state)
                         SuccessLabel.successLabel(state)
-                        ShuffleButton.shuffleButton(rowsNumber, columnsNumber, state, buttonList)
-                        PuzzleButtonsGrid.puzzleButtonsGrid(state, buttonList, checkForSuccess)
+                        ShuffleButton.shuffleButton(rowsNumber, columnsNumber, state, grid)
+                        PuzzleButtonsBoard.puzzleButtonsBoard(state, grid)
                     }
                 }
             }

@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
-import com.github.stephenostapenko.fifteenpuzzle.MainPanel
+import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 
 class SuccessLabel {
     companion object {

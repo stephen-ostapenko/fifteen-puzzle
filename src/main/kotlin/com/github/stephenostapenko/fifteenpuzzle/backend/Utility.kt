@@ -2,9 +2,38 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 
 class Utility {
     companion object {
-        private const val SHUFFLE_ITERATIONS = 501
+        /*fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
+            return {
+                var turnCompleted = false
+                for ((rowDelta, colDelta) in listOf(
+                    Pair(-1, 0),
+                    Pair(0, 1),
+                    Pair(1, 0),
+                    Pair(0, -1)
+                )) {
+                    if (row + rowDelta !in (0 until rowsNumber) ||
+                        col + colDelta !in (0 until columnsNumber)) {
+                        continue
+                    }
+                    if (!buttonContexts[row + rowDelta][col + colDelta].enabled.value) {
+                        swapContexts(row, col, row + rowDelta, col + colDelta)
+                        turnCompleted = true
+                        break
+                    }
+                }
 
-        fun shuffleCells(rowsNumber: Int, columnsNumber: Int, buttonList: List<List<PuzzleButtonImpl>>) {
+                if (turnCompleted) {
+                    turnsCount.value = if (gameInitState.value) 1 else turnsCount.value + 1
+                    gameInitState.value = false
+                }
+
+                updateGameStates()
+            }
+        }*/
+
+        private const val SHUFFLE_ITERATIONS = 3
+
+        fun shuffleCells(rowsNumber: Int, columnsNumber: Int, grid: PuzzleGrid) {
             val cells = (0 until rowsNumber).map { row ->
                 (0 until columnsNumber).map { col ->
                     row to col
@@ -39,7 +68,7 @@ class Utility {
             for (row in 0 until rowsNumber) {
                 for (col in 0 until columnsNumber) {
                     val (rowPos, colPos) = cells[row][col]
-                    buttonList[rowPos][colPos].moveButtonOnGrid(row, col)
+                    grid.setButtonPositionOnGrid(rowPos, colPos, row, col)
                 }
             }
         }
