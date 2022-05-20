@@ -12,9 +12,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -24,76 +21,12 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 import com.github.stephenostapenko.fifteenpuzzle.backend.Utility
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.roundToInt
 
 class PuzzleButton {
     companion object {
         @Composable
-        fun puzzleButton(state: MainPanel.GameState,
-                         button: PuzzleButtonImpl,
-                         grid: PuzzleGrid)
-        {
+        fun puzzleButton(state: MainPanel.GameState, button: PuzzleButtonImpl, grid: PuzzleGrid) {
             button.updatePositionOnBoard()
-
-            val onDragAction = action@{ change: PointerInputChange, dragAmount: Offset ->
-                if (!button.active) {
-                    return@action
-                }
-
-                state.setInProgress()
-                button.select()
-
-                var nextButtonXPos = button.getXPos() + dragAmount.x.roundToInt()
-                var nextButtonYPos = button.getYPos() + dragAmount.y.roundToInt()
-                nextButtonXPos = max(0, nextButtonXPos)
-                nextButtonXPos = min(button.boardWidth - button.getWidth(), nextButtonXPos)
-                nextButtonYPos = max(0, nextButtonYPos)
-                nextButtonYPos = min(button.boardHeight - button.getHeight(), nextButtonYPos)
-
-                button.setXPos(nextButtonXPos)
-                button.setYPos(nextButtonYPos)
-                change.consumeAllChanges()
-            }
-
-            val onDragEndAction = action@{
-                button.deselect()
-
-                val swapButton = grid.findNearestButtonOnGrid(button)
-                if (swapButton.active) {
-                    button.updatePositionOnBoard()
-                    return@action
-                }
-                if (button.getManhattanDistOnGrid(swapButton) != 1) {
-                    button.updatePositionOnBoard()
-                    return@action
-                }
-
-                val halfButtonHeight = swapButton.getHeight() / 2
-                val halfButtonWidth = swapButton.getWidth() / 2
-                if (button.getXPos() !in
-                    (swapButton.getXPos() - halfButtonWidth)..(swapButton.getXPos() + halfButtonWidth))
-                {
-                    button.updatePositionOnBoard()
-                    return@action
-                }
-                if (button.getYPos() !in
-                    (swapButton.getYPos() - halfButtonHeight)..(swapButton.getYPos() + halfButtonHeight))
-                {
-                    button.updatePositionOnBoard()
-                    return@action
-                }
-
-                button.swapPositions(swapButton)
-                button.updatePositionOnBoard()
-                swapButton.updatePositionOnBoard()
-
-                state.incTurnsCount()
-                if (grid.checkIfGridIsFinished()) {
-                    state.setFinished()
-                }
-            }
 
             Button(
                 enabled = button.active,
@@ -116,8 +49,8 @@ class PuzzleButton {
                     .pointerInput(Unit) {
                         if (button.active) {
                             detectDragGestures(
-                                onDrag = onDragAction,
-                                onDragEnd = onDragEndAction
+                                onDrag = button.getOnDragAction(state),
+                                onDragEnd = button.getOnDragEndAction(state, grid)
                             )
                         }
                     }

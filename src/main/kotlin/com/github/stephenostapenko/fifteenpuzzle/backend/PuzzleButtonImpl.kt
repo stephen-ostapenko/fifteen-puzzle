@@ -1,7 +1,12 @@
 package com.github.stephenostapenko.fifteenpuzzle.backend
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.consumeAllChanges
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
 
 @Suppress("MemberVisibilityCanBePrivate", "unused")
@@ -126,5 +131,63 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
 
     fun getManhattanDistOnGrid(button: PuzzleButtonImpl): Int {
         return abs(row - button.row) + abs(col - button.col)
+    }
+
+    fun getOnDragAction(state: MainPanel.GameState): (PointerInputChange, Offset) -> Unit {
+        return action@{ change: PointerInputChange, dragAmount: Offset ->
+            if (!active) {
+                return@action
+            }
+
+            state.setInProgress()
+            select()
+
+            var nextButtonXPos = getXPos() + dragAmount.x.roundToInt()
+            var nextButtonYPos = getYPos() + dragAmount.y.roundToInt()
+            nextButtonXPos = max(0, nextButtonXPos)
+            nextButtonXPos = min(boardWidth - getWidth(), nextButtonXPos)
+            nextButtonYPos = max(0, nextButtonYPos)
+            nextButtonYPos = min(boardHeight - getHeight(), nextButtonYPos)
+
+            setXPos(nextButtonXPos)
+            setYPos(nextButtonYPos)
+            change.consumeAllChanges()
+        }
+    }
+
+    fun getOnDragEndAction(state: MainPanel.GameState, grid: PuzzleGrid): () -> Unit {
+        return action@{
+            deselect()
+
+            val swapButton = grid.findNearestButtonOnGrid(this)
+            if (swapButton.active) {
+                updatePositionOnBoard()
+                return@action
+            }
+            if (getManhattanDistOnGrid(swapButton) != 1) {
+                updatePositionOnBoard()
+                return@action
+            }
+
+            val halfButtonHeight = swapButton.getHeight() / 2
+            val halfButtonWidth = swapButton.getWidth() / 2
+            if (getXPos() !in (swapButton.getXPos() - halfButtonWidth)..(swapButton.getXPos() + halfButtonWidth)) {
+                updatePositionOnBoard()
+                return@action
+            }
+            if (getYPos() !in (swapButton.getYPos() - halfButtonHeight)..(swapButton.getYPos() + halfButtonHeight)) {
+                updatePositionOnBoard()
+                return@action
+            }
+
+            swapPositions(swapButton)
+            updatePositionOnBoard()
+            swapButton.updatePositionOnBoard()
+
+            state.incTurnsCount()
+            if (grid.checkIfGridIsFinished()) {
+                state.setFinished()
+            }
+        }
     }
 }
