@@ -2,7 +2,7 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 
 import kotlin.math.pow
 
-class PuzzleGrid(private val rowsNumber: Int, private val columnsNumber: Int) {
+class PuzzleGrid(val rowsNumber: Int, val columnsNumber: Int) {
     val buttonList: List<PuzzleButtonImpl> = (0 until rowsNumber).map { row ->
         (0 until columnsNumber).map { col ->
             PuzzleButtonImpl(row, col, rowsNumber, columnsNumber)
@@ -19,9 +19,14 @@ class PuzzleGrid(private val rowsNumber: Int, private val columnsNumber: Int) {
         }
     }
 
-    fun getButtonFromGrid(row: Int, col: Int): PuzzleButtonImpl {
+    fun getButtonFromGridByInitPlace(row: Int, col: Int): PuzzleButtonImpl {
         return buttonList.find { it.initRow == row && it.initCol == col } ?:
-            error("Button for position ($row, $col) can't be found")
+            error("Button for initial position ($row, $col) can't be found")
+    }
+
+    fun getButtonFromGridByActualPlace(row: Int, col: Int): PuzzleButtonImpl {
+        return buttonList.find { it.getRow() == row && it.getCol() == col } ?:
+        error("Button for actual position ($row, $col) can't be found")
     }
 
     fun findNearestButtonOnGrid(button: PuzzleButtonImpl): PuzzleButtonImpl {

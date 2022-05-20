@@ -2,34 +2,46 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 
 class Utility {
     companion object {
-        /*fun getOnClickActionForPuzzleButton(row: Int, col: Int): (() -> Unit) {
+        fun getOnClickActionForPuzzleButton(state: MainPanel.GameState, button: PuzzleButtonImpl,
+                                            grid: PuzzleGrid): (() -> Unit)
+        {
             return {
+                val row = button.getRow()
+                val col = button.getCol()
                 var turnCompleted = false
+
                 for ((rowDelta, colDelta) in listOf(
                     Pair(-1, 0),
                     Pair(0, 1),
                     Pair(1, 0),
                     Pair(0, -1)
                 )) {
-                    if (row + rowDelta !in (0 until rowsNumber) ||
-                        col + colDelta !in (0 until columnsNumber)) {
+                    if (row + rowDelta !in (0 until grid.rowsNumber) ||
+                        col + colDelta !in (0 until grid.columnsNumber)) {
                         continue
                     }
-                    if (!buttonContexts[row + rowDelta][col + colDelta].enabled.value) {
-                        swapContexts(row, col, row + rowDelta, col + colDelta)
+
+                    val swapButton = grid.getButtonFromGridByActualPlace(row + rowDelta, col + colDelta)
+                    if (!swapButton.active) {
+                        button.swapPositions(swapButton)
+                        button.updatePositionOnBoard()
+                        swapButton.updatePositionOnBoard()
+
                         turnCompleted = true
                         break
                     }
                 }
 
                 if (turnCompleted) {
-                    turnsCount.value = if (gameInitState.value) 1 else turnsCount.value + 1
-                    gameInitState.value = false
-                }
+                    state.setInProgress()
+                    state.incTurnsCount()
 
-                updateGameStates()
+                    if (grid.checkIfGridIsFinished()) {
+                        state.setFinished()
+                    }
+                }
             }
-        }*/
+        }
 
         private const val SHUFFLE_ITERATIONS = 501
 
@@ -68,7 +80,7 @@ class Utility {
             for (row in 0 until rowsNumber) {
                 for (col in 0 until columnsNumber) {
                     val (rowPos, colPos) = cells[row][col]
-                    grid.getButtonFromGrid(rowPos, colPos).moveButtonOnGrid(row, col)
+                    grid.getButtonFromGridByInitPlace(rowPos, colPos).moveButtonOnGrid(row, col)
                 }
             }
         }

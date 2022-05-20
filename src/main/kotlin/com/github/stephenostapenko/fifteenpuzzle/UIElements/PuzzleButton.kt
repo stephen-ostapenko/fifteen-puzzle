@@ -23,6 +23,7 @@ import androidx.compose.ui.zIndex
 import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleButtonImpl
 import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
+import com.github.stephenostapenko.fifteenpuzzle.backend.Utility
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -96,7 +97,7 @@ class PuzzleButton {
 
             Button(
                 enabled = button.active,
-                onClick = {},
+                onClick = Utility.getOnClickActionForPuzzleButton(state, button, grid),
                 colors = ButtonDefaults.buttonColors(
                     if (button.checkSelected())
                         MaterialTheme.colors.secondary
