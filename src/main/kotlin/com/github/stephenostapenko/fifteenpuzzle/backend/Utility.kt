@@ -1,7 +1,5 @@
 package com.github.stephenostapenko.fifteenpuzzle.backend
 
-import androidx.compose.runtime.Composable
-
 class Utility {
     companion object {
         fun getOnClickActionForPuzzleButton(state: MainPanel.GameState, button: PuzzleButtonImpl,
@@ -47,7 +45,6 @@ class Utility {
 
         private const val SHUFFLE_ITERATIONS = 501
 
-        @Composable
         fun shuffleCells(rowsNumber: Int, columnsNumber: Int, grid: PuzzleGrid) {
             val cells = (0 until rowsNumber).map { row ->
                 (0 until columnsNumber).map { col ->
@@ -83,7 +80,7 @@ class Utility {
             for (row in 0 until rowsNumber) {
                 for (col in 0 until columnsNumber) {
                     val (rowPos, colPos) = cells[row][col]
-                    grid.getButtonFromGridByInitPlace(rowPos, colPos).moveButtonOnGridAnimated(row, col)
+                    grid.getButtonFromGridByInitPlace(rowPos, colPos).moveButtonOnGrid(row, col)
                 }
             }
         }

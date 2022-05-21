@@ -1,14 +1,9 @@
 package com.github.stephenostapenko.fifteenpuzzle.backend
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.consumeAllChanges
-import androidx.compose.ui.unit.dp
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -40,21 +35,12 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
         updatePositionOnBoard()
     }
 
-    @Composable
-    fun moveButtonOnGridAnimated(newRow: Int, newCol: Int) {
-        row = newRow
-        col = newCol
-        updatePositionOnBoardAnimated()
-    }
-
     fun checkButtonFitsInitPosition(): Boolean {
         return row == initRow && col == initCol
     }
 
     private val xPos = mutableStateOf(0)
     private val yPos = mutableStateOf(0)
-    private val xPosForAnimation = mutableStateOf(0)
-    private val yPosForAnimation = mutableStateOf(0)
 
     fun getXPos(): Int {
         return xPos.value
@@ -64,21 +50,11 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
         return yPos.value
     }
 
-    fun getXPosForAnimation(): Int {
-        return xPosForAnimation.value
-    }
-
-    fun getYPosForAnimation(): Int {
-        return yPosForAnimation.value
-    }
-
     fun setXPos(pos: Int) {
-        xPosForAnimation.value = pos
         xPos.value = pos
     }
 
     fun setYPos(pos: Int) {
-        yPosForAnimation.value = pos
         yPos.value = pos
     }
 
@@ -97,13 +73,6 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
 
     fun updatePositionOnBoard() {
         setXPos((getScaledXPos() * boardWidth).roundToInt())
-        setYPos((getScaledYPos() * boardHeight).roundToInt())
-    }
-
-    @Composable
-    fun updatePositionOnBoardAnimated() {
-        val xPos by animateIntAsState(xPosForAnimation.value)
-        setXPos(xPos)
         setYPos((getScaledYPos() * boardHeight).roundToInt())
     }
 

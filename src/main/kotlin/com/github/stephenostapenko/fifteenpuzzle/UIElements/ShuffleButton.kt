@@ -19,7 +19,7 @@ class ShuffleButton {
         {
             Button(
                 enabled = (state.getState() in MainPanel.GameState.notProgressStates),
-                onClick = @Composable{
+                onClick = {
                     state.setReady()
                     Utility.shuffleCells(rowsNumber, columnsNumber, grid)
                 },
