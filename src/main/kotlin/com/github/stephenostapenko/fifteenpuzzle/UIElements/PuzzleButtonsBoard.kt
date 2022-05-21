@@ -15,14 +15,14 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.PuzzleGrid
 class PuzzleButtonsBoard {
     companion object {
         @Composable
-        fun puzzleButtonsBoard(state: MainPanel.GameState, grid: PuzzleGrid) {
+        fun drawPuzzleButtonsBoard(state: MainPanel.GameState, grid: PuzzleGrid) {
             BoxWithConstraints(modifier = Modifier
                 .fillMaxSize()
                 .border(BorderStroke(1.dp, Color.Gray), RoundedCornerShape(5.dp))
             ) {
                 grid.initGrid(constraints.maxHeight, constraints.maxWidth)
                 grid.buttonList.forEach {
-                    PuzzleButton.puzzleButton(state, it, grid)
+                    PuzzleButton.drawPuzzleButton(state, it, grid)
                 }
             }
         }

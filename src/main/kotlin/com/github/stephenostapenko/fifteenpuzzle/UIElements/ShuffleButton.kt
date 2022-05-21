@@ -14,8 +14,8 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.Utility
 class ShuffleButton {
     companion object {
         @Composable
-        fun shuffleButton(rowsNumber: Int, columnsNumber: Int,
-                          state: MainPanel.GameState, grid: PuzzleGrid)
+        fun drawShuffleButton(rowsNumber: Int, columnsNumber: Int,
+                              state: MainPanel.GameState, grid: PuzzleGrid)
         {
             Button(
                 enabled = (state.getState() in MainPanel.GameState.notProgressStates),

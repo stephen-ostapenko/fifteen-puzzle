@@ -25,7 +25,7 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.Utility
 class PuzzleButton {
     companion object {
         @Composable
-        fun puzzleButton(state: MainPanel.GameState, button: PuzzleButtonImpl, grid: PuzzleGrid) {
+        fun drawPuzzleButton(state: MainPanel.GameState, button: PuzzleButtonImpl, grid: PuzzleGrid) {
             button.updatePositionOnBoard()
 
             Button(
@@ -49,7 +49,8 @@ class PuzzleButton {
                     .pointerInput(Unit) {
                         if (button.active) {
                             detectDragGestures(
-                                onDrag = button.getOnDragAction(state),
+                                onDrag = button.getOnDragAction(),
+                                onDragStart = button.getOnDragStartAction(state),
                                 onDragEnd = button.getOnDragEndAction(state, grid)
                             )
                         }

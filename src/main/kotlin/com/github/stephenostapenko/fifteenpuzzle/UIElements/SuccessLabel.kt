@@ -11,7 +11,7 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 class SuccessLabel {
     companion object {
         @Composable
-        fun successLabel(state: MainPanel.GameState) {
+        fun drawSuccessLabel(state: MainPanel.GameState) {
             Text(
                 text = if (state.getState() == MainPanel.GameState.ProcessState.Finished) "Success!" else "",
                 modifier = Modifier.scale(2f).padding(20.dp)

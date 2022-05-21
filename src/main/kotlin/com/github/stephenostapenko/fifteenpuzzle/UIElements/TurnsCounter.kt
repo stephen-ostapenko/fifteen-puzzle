@@ -11,7 +11,7 @@ import com.github.stephenostapenko.fifteenpuzzle.backend.MainPanel
 class TurnsCounter {
     companion object {
         @Composable
-        fun turnsCounter(state: MainPanel.GameState) {
+        fun drawTurnsCounter(state: MainPanel.GameState) {
             val turnsCount = state.getTurnsCount()
             Text(
                 text = "$turnsCount turn" + if (turnsCount != 1) "s" else "",

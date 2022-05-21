@@ -133,14 +133,11 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
         return abs(row - button.row) + abs(col - button.col)
     }
 
-    fun getOnDragAction(state: MainPanel.GameState): (PointerInputChange, Offset) -> Unit {
+    fun getOnDragAction(): (PointerInputChange, Offset) -> Unit {
         return action@{ change: PointerInputChange, dragAmount: Offset ->
             if (!active) {
                 return@action
             }
-
-            state.setInProgress()
-            select()
 
             var nextButtonXPos = getXPos() + dragAmount.x.roundToInt()
             var nextButtonYPos = getYPos() + dragAmount.y.roundToInt()
@@ -152,6 +149,17 @@ class PuzzleButtonImpl(val initRow: Int, val initCol: Int,
             setXPos(nextButtonXPos)
             setYPos(nextButtonYPos)
             change.consumeAllChanges()
+        }
+    }
+
+    fun getOnDragStartAction(state: MainPanel.GameState): (Offset) -> Unit {
+        return action@{
+            if (!active) {
+                return@action
+            }
+
+            state.setInProgress()
+            select()
         }
     }
 

@@ -3,7 +3,7 @@ package com.github.stephenostapenko.fifteenpuzzle.backend
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.awt.ComposePanel
-import com.github.stephenostapenko.fifteenpuzzle.UIElements.MainInterfaceComposePanel
+import com.github.stephenostapenko.fifteenpuzzle.UIElements.MainComposePanel
 import javax.swing.JComponent
 
 class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
@@ -12,7 +12,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
     fun getSwingPanel(): JComponent {
         return ComposePanel().apply {
             setContent {
-                MainInterfaceComposePanel.mainInterfaceComposePanel(
+                MainComposePanel.drawMainComposePanel(
                     rowsNumber, columnsNumber,
                     GameState, grid
                 )
@@ -22,7 +22,7 @@ class MainPanel(private val rowsNumber: Int, private val columnsNumber: Int) {
 
     @Composable
     fun getComposePanel() {
-        MainInterfaceComposePanel.mainInterfaceComposePanel(
+        MainComposePanel.drawMainComposePanel(
             rowsNumber, columnsNumber,
             GameState, grid
         )
