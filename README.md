@@ -1,13 +1,11 @@
 # Fifteen Puzzle
 
 ![Build](https://github.com/stephen-ostapenko/fifteen-puzzle/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
 
 <!-- Plugin description -->
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
 
-To keep everything working, do not remove `<!-- ... -->` sections. 
+Plugin to play [Fifteen Puzzle](https://en.wikipedia.org/wiki/15_puzzle) in Intellij IDEA, CLion, etc.
+
 <!-- Plugin description end -->
 
 ## How to run
